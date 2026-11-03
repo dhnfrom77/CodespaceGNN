@@ -1,0 +1,356 @@
+\documentclass[border=8pt,tikz]{standalone}
+\usepackage{fontspec}
+\usepackage{babel}
+\babelprovide[import, main]{vietnamese}
+\babelfont{rm}{Latin Modern Roman}
+\babelfont{sf}{Latin Modern Roman}
+\babelfont{tt}{Latin Modern Roman}
+\usepackage{tikz}
+\usepackage{Box}
+\usepackage{RightBandedBox}
+\usepackage{Ball}
+\usetikzlibrary{arrows.meta,calc,positioning}
+
+\begin{document}
+\begin{tikzpicture}
+
+% ------------------------------------------------------------------------------
+% CELL 1 (TOP-LEFT): M1_MLP_DeepSets (Zaheer et al., 2017 [6])
+% ------------------------------------------------------------------------------
+\filldraw[fill=white, draw=slate!45, line width=0.95pt, rounded corners=5pt] (0.00,7.20) rectangle (8.80,13.80);
+\node[fill=slate, text=white, rounded corners=3pt, inner sep=2.8pt, anchor=north west, font=\scriptsize\bfseries]
+    at (0.20,13.62) {1. \texttt{M1\_MLP\_DeepSets} (Zaheer et al., 2017): $E = \emptyset$};
+
+% Left: TikZ Isolated Point Set (Parallel Independent Arrows, E = empty!)
+\node[circle, fill=softgreen, draw=darkgreen, line width=1.1pt, minimum width=0.52cm, font=\tiny\bfseries] at (0.95,11.95) {$x_1$};
+\node[circle, fill=softgreen, draw=darkgreen, line width=1.1pt, minimum width=0.52cm, font=\tiny\bfseries] at (0.95,10.95) {$x_2$};
+\node[text=slate, font=\scriptsize\bfseries] at (0.95,10.30) {$\vdots$};
+\node[circle, fill=softgreen, draw=darkgreen, line width=1.1pt, minimum width=0.52cm, font=\tiny\bfseries] at (0.95,9.65) {$x_{148}$};
+\node[text=crimson, anchor=north, font=\tiny\bfseries] at (0.95,9.20) {$E = \emptyset$};
+
+% Right: PlotNeuralNet 3D Point-MLP phi_theta -> Pool -> rho_theta
+\pic[shift={(0,0,0)}] at (2.55,10.85) {
+    RightBandedBox={
+        name=m1_phi,
+        caption=$\phi_{\boldsymbol{\theta}}$,
+        xlabel={{128}},
+        zlabel=148,
+        fill=ConvColor,
+        bandfill=ConvReluColor,
+        height=13,
+        width={1.6,1.6},
+        depth=11
+    }
+};
+\pic[shift={(0,0,0)}] at (5.15,10.85) {
+    Ball={name=m1_pool, fill=SumColor, radius=1.9, logo=$\Sigma$}
+};
+\pic[shift={(0,0,0)}] at (6.55,10.85) {
+    RightBandedBox={
+        name=m1_rho,
+        caption=$\rho_{\boldsymbol{\theta}}$,
+        xlabel={{2}},
+        ylabel=$B$,
+        fill=PinkTensor,
+        bandfill=SoftmaxColor,
+        height=10,
+        width={1.6},
+        depth=9
+    }
+};
+\draw[->, draw=slate, line width=1.05pt] (1.30,11.95) -- (2.50,11.20);
+\draw[->, draw=slate, line width=1.05pt] (1.30,10.95) -- (2.50,10.95);
+\draw[->, draw=slate, line width=1.05pt] (1.30,9.65)  -- (2.50,10.50);
+\draw[->, draw=slate, line width=1.2pt] (m1_phi-east) -- (m1_pool-west);
+\draw[->, draw=slate, line width=1.2pt] (m1_pool-east) -- (m1_rho-west);
+
+\node[fill=softred!65, draw=crimson!75, line width=0.8pt, rounded corners=3pt, inner sep=3.5pt, text width=8.15cm, anchor=south west, font=\scriptsize]
+    at (0.22,7.38) {
+    $(\hat{\mu},\hat{\sigma})_{\mathcal{M}_1} = \rho_{\boldsymbol{\theta}}\!\left(\bigoplus_{i=1}^{148}\phi_{\boldsymbol{\theta}}(x_{k,i}, T_i)\right) \implies R^2(\hat{\sigma}) = \mathbf{0.5686},\;\; \mathrm{MSE}(\hat{\mu}) = 0.6844$
+};
+
+% ------------------------------------------------------------------------------
+% CELL 2 (TOP-CENTER): M2_GCN_Unweighted (Kipf & Welling, 2017 [7])
+% ------------------------------------------------------------------------------
+\filldraw[fill=white, draw=slate!45, line width=0.95pt, rounded corners=5pt] (9.15,7.20) rectangle (17.95,13.80);
+\node[fill=deepblue, text=white, rounded corners=3pt, inner sep=2.8pt, anchor=north west, font=\scriptsize\bfseries]
+    at (9.35,13.62) {2. \texttt{M2\_GCN\_Unweighted} (Kipf \& Welling, 2017)};
+
+\node[circle, fill=softgreen, draw=darkgreen, line width=1.0pt, minimum width=0.45cm, font=\tiny] (m2_l1) at (9.85,12.00) {$v_1$};
+\node[circle, fill=softgreen, draw=darkgreen, line width=1.0pt, minimum width=0.45cm, font=\tiny] (m2_l2) at (9.85,9.80) {$v_2$};
+\node[circle, fill=softblue, draw=deepblue, line width=1.0pt, minimum width=0.48cm, font=\tiny] (m2_u) at (11.05,10.90) {$u$};
+\draw[<->, draw=deepblue, line width=1.35pt] (10.10,11.85) -- (10.82,11.08);
+\draw[<->, draw=deepblue, line width=1.35pt] (10.10,9.95)  -- (10.82,10.72);
+\node[text=crimson, anchor=north, font=\tiny\bfseries] at (10.45,9.32) {$\Delta t_e \equiv 1$};
+
+\pic[shift={(0,0,0)}] at (12.15,10.85) {
+    RightBandedBox={
+        name=m2_gcn,
+        caption=$\tilde{\mathbf{D}}^{-\frac{1}{2}}\tilde{\mathbf{A}}\tilde{\mathbf{D}}^{-\frac{1}{2}}$,
+        xlabel={{64,64}},
+        ylabel=295,
+        fill=TealTensor,
+        bandfill=UnpoolColor,
+        height=13,
+        width={1.4,1.4,1.4},
+        depth=11
+    }
+};
+\pic[shift={(0,0,0)}] at (14.95,10.85) {
+    Ball={name=m2_pool, fill=SumColor, radius=1.9, logo=$\Sigma$}
+};
+\pic[shift={(0,0,0)}] at (16.25,10.85) {
+    RightBandedBox={
+        name=m2_out,
+        caption=$(\hat{\mu},\hat{\sigma})_{\mathcal{M}_2}$,
+        xlabel={{2}},
+        ylabel=$B$,
+        fill=PinkTensor,
+        bandfill=SoftmaxColor,
+        height=10,
+        width={1.5},
+        depth=9
+    }
+};
+\draw[->, draw=slate, line width=1.2pt] (11.32,10.90) -- (m2_gcn-west);
+\draw[->, draw=slate, line width=1.2pt] (m2_gcn-east) -- (m2_pool-west);
+\draw[->, draw=slate, line width=1.2pt] (m2_pool-east) -- (m2_out-west);
+
+\node[fill=softblue!75, draw=deepblue!75, line width=0.8pt, rounded corners=3pt, inner sep=3.5pt, text width=8.15cm, anchor=south west, font=\scriptsize]
+    at (9.37,7.38) {
+    $\mathbf{H}^{(l+1)} = \sigma\!\left(\tilde{\mathbf{D}}^{-1/2}\tilde{\mathbf{A}}\tilde{\mathbf{D}}^{-1/2}\mathbf{H}^{(l)}\mathbf{W}^{(l)}\right) \implies R^2(\hat{\sigma}) = \mathbf{0.8867},\;\; \mathrm{MSE}(\hat{\mu}) = 0.5859$
+};
+
+% ------------------------------------------------------------------------------
+% CELL 3 (TOP-RIGHT): M3_EdgeMPNN_GINE (Hu et al., 2020 [9])
+% ------------------------------------------------------------------------------
+\filldraw[fill=white, draw=slate!45, line width=0.95pt, rounded corners=5pt] (18.30,7.20) rectangle (27.10,13.80);
+\node[fill=amber!90!black, text=white, rounded corners=3pt, inner sep=2.8pt, anchor=north west, font=\scriptsize\bfseries]
+    at (18.50,13.62) {3. \texttt{M3\_EdgeMPNN\_GINE} (Hu et al., 2020): $u \leftrightarrow v$};
+
+\node[circle, fill=softgreen, draw=darkgreen, line width=1.0pt, minimum width=0.45cm, font=\tiny] at (19.00,12.00) {$v_1$};
+\node[circle, fill=softgreen, draw=darkgreen, line width=1.0pt, minimum width=0.45cm, font=\tiny] at (19.00,9.80) {$v_2$};
+\node[circle, fill=softred, draw=crimson, line width=1.1pt, minimum width=0.50cm, font=\tiny\bfseries, text=crimson] at (20.25,10.90) {$0$};
+\draw[->, draw=teal!90!black, line width=1.8pt] (19.25,11.88) -- (20.02,11.08);
+\draw[->, draw=crimson, line width=1.2pt, dashed] (19.95,10.80) -- (19.20,11.62);
+\draw[<->, draw=amber!90!black, line width=1.0pt] (19.25,9.95) -- (20.02,10.72);
+\node[text=crimson, anchor=north, font=\tiny\bfseries] at (19.62,9.32) {$0\text{-Leakage } u \to v$};
+
+\pic[shift={(0,0,0)}] at (21.35,10.85) {
+    RightBandedBox={
+        name=m3_gine,
+        caption=$\mathrm{GINE}(\Delta t_e)$,
+        xlabel={{64,64}},
+        ylabel=295,
+        fill=ConvReluColor,
+        bandfill=PoolColor,
+        height=13,
+        width={1.4,1.4,1.4},
+        depth=11
+    }
+};
+\pic[shift={(0,0,0)}] at (24.15,10.85) {
+    Ball={name=m3_pool, fill=SumColor, radius=1.9, logo=$\|$}
+};
+\pic[shift={(0,0,0)}] at (25.45,10.85) {
+    RightBandedBox={
+        name=m3_out,
+        caption=$(\hat{\mu},\hat{\sigma})_{\mathcal{M}_3}$,
+        xlabel={{2}},
+        ylabel=$B$,
+        fill=PinkTensor,
+        bandfill=SoftmaxColor,
+        height=10,
+        width={1.5},
+        depth=9
+    }
+};
+\draw[->, draw=slate, line width=1.2pt] (20.52,10.90) -- (m3_gine-west);
+\draw[->, draw=slate, line width=1.2pt] (m3_gine-east) -- (m3_pool-west);
+\draw[->, draw=slate, line width=1.2pt] (m3_pool-east) -- (m3_out-west);
+
+\node[fill=softamber!80, draw=amber!85!black, line width=0.8pt, rounded corners=3pt, inner sep=3.5pt, text width=8.15cm, anchor=south west, font=\scriptsize]
+    at (18.52,7.38) {
+    $\mathbf{h}_v^{(l+1)} = \psi\!\left((1+\epsilon)\mathbf{h}_v^{(l)} + \sum_{u\in\mathcal{N}(v)}\mathrm{ReLU}(\mathbf{h}_u^{(l)} + \phi_e(\mathbf{e}_{uv}))\right) \implies R^2(\hat{\sigma}) = \mathbf{0.9790}$
+};
+
+% ------------------------------------------------------------------------------
+% CELL 4 (BOTTOM-LEFT): M4_PhyloGNN_RawMSE (Directed Tree-MPNN + Raw L2 Loss)
+% ------------------------------------------------------------------------------
+\filldraw[fill=white, draw=slate!45, line width=0.95pt, rounded corners=5pt] (0.00,0.00) rectangle (8.80,6.65);
+\node[fill=crimson!90!black, text=white, rounded corners=3pt, inner sep=2.8pt, anchor=north west, font=\scriptsize\bfseries]
+    at (0.20,6.47) {4. \texttt{M4\_PhyloGNN\_RawMSE}: Directed $v \to u$ + $\mathcal{L}_{\mathrm{MSE}}$};
+
+\node[circle, fill=softgreen, draw=darkgreen, line width=1.0pt, minimum width=0.45cm, font=\tiny] at (0.85,4.85) {$l$};
+\node[circle, fill=softgreen, draw=darkgreen, line width=1.0pt, minimum width=0.45cm, font=\tiny] at (0.85,2.65) {$r$};
+\node[circle, fill=softblue, draw=deepblue, line width=1.1pt, minimum width=0.50cm, font=\tiny\bfseries] at (2.05,3.75) {$u$};
+\draw[->, draw=teal!90!black, line width=1.7pt] (1.10,4.72) -- (1.82,3.92);
+\draw[->, draw=teal!90!black, line width=1.7pt] (1.10,2.78) -- (1.82,3.58);
+\node[text=darkteal, anchor=north, font=\tiny\bfseries] at (1.45,2.22) {$148 \to 294$};
+
+\pic[shift={(0,0,0)}] at (3.05,3.70) {
+    RightBandedBox={
+        name=m4_mpnn,
+        caption={$\mathbf{C}_{\mathrm{int}}, H_{294}$},
+        xlabel={{147,295}},
+        ylabel=$B$,
+        fill=PurpleTensor,
+        bandfill=FcColor,
+        height=13,
+        width={1.5,1.5},
+        depth=11
+    }
+};
+\pic[shift={(0,0,0)}] at (5.55,3.70) {
+    Ball={name=m4_loss, fill=PoolColor, radius=2.1, logo=$\ell_2^2$}
+};
+\pic[shift={(0,0,0)}] at (6.85,3.70) {
+    RightBandedBox={
+        name=m4_out,
+        caption=$(\hat{\mu},\hat{\sigma})_{\mathcal{M}_4}$,
+        xlabel={{2}},
+        ylabel=$B$,
+        fill=RedTensor,
+        bandfill=PoolColor,
+        height=10,
+        width={1.5},
+        depth=9
+    }
+};
+\draw[->, draw=slate, line width=1.2pt] (2.32,3.75) -- (m4_mpnn-west);
+\draw[->, draw=slate, line width=1.2pt] (m4_mpnn-east) -- (m4_loss-west);
+\draw[->, draw=slate, line width=1.2pt] (m4_loss-east) -- (m4_out-west);
+
+\node[fill=softred!75, draw=crimson!85, line width=0.8pt, rounded corners=3pt, inner sep=3.5pt, text width=8.15cm, anchor=south west, font=\scriptsize]
+    at (0.22,0.18) {
+    $\mathcal{L}_{\mathrm{MSE}} = \|\hat{\mu}-\mu\|_2^2 + \|\hat{\sigma}-\sigma\|_2^2 \implies \mathbf{2{,}500\times}\text{ \textbf{Grad Bias}},\;\; \mathrm{MSE}(\hat{\mu}) = \mathbf{0.7933}$
+};
+
+% ------------------------------------------------------------------------------
+% CELL 5 (BOTTOM-CENTER): M5A_PhyloGNN_UnbiasedNLL (Proposed 1, Patton et al. [15])
+% ------------------------------------------------------------------------------
+\filldraw[fill=white, draw=teal!80!black, line width=1.25pt, rounded corners=5pt] (9.15,0.00) rectangle (17.95,6.65);
+\node[fill=darkteal, text=white, rounded corners=3pt, inner sep=2.8pt, anchor=north west, font=\scriptsize\bfseries]
+    at (9.35,6.47) {5. \texttt{M5A\_PhyloGNN\_UnbiasedNLL}: Dual-Stream + $\hat{\sigma}_k^{-2}$};
+
+\node[circle, fill=softgreen, draw=darkgreen, line width=1.0pt, minimum width=0.44cm, font=\tiny] at (9.80,4.85) {$l$};
+\node[circle, fill=softgreen, draw=darkgreen, line width=1.0pt, minimum width=0.44cm, font=\tiny] at (9.80,2.65) {$r$};
+\node[circle, fill=softteal, draw=darkteal, line width=1.1pt, minimum width=0.48cm, font=\tiny\bfseries] at (10.90,3.75) {$u$};
+\draw[->, draw=teal!90!black, line width=1.6pt] (10.04,4.72) -- (10.68,3.92);
+\draw[->, draw=teal!90!black, line width=1.6pt] (10.04,2.78) -- (10.68,3.58);
+
+\pic[shift={(0,0,0)}] at (12.15,4.70) {
+    RightBandedBox={
+        name=m5a_s1,
+        caption=$\mathbf{C}_{\mathrm{int}}^{\odot 2}$,
+        xlabel={{147}},
+        ylabel=$B$,
+        fill=TealTensor,
+        bandfill=UnpoolColor,
+        height=8,
+        width={1.5},
+        depth=8
+    }
+};
+\pic[shift={(0,0,0)}] at (12.15,2.55) {
+    RightBandedBox={
+        name=m5a_s2,
+        caption=$\mathbf{H}_{\mathrm{nodes}}$,
+        xlabel={{295}},
+        ylabel=$B$,
+        fill=ConvColor,
+        bandfill=ConvReluColor,
+        height=8,
+        width={1.5},
+        depth=8
+    }
+};
+\pic[shift={(0,0,0)}] at (14.65,3.70) {
+    Ball={name=m5a_nll, fill=SumColor, radius=2.1, logo=$\hat{\sigma}_k^{-2}$}
+};
+\pic[shift={(0,0,0)}] at (16.15,3.70) {
+    RightBandedBox={
+        name=m5a_out,
+        caption=$(\hat{\mu},\hat{\sigma})_{\mathcal{M}_{5A}}$,
+        xlabel={{2}},
+        ylabel=$B$,
+        fill=GreenTensor,
+        bandfill=SumColor,
+        height=11,
+        width={1.5},
+        depth=9
+    }
+};
+\draw[->, draw=darkteal, line width=1.15pt] (11.16,3.90) -- (11.55,4.70) -- (m5a_s1-west);
+\draw[->, draw=amber!90!black, line width=1.15pt] (11.16,3.60) -- (11.55,2.55) -- (m5a_s2-west);
+\draw[->, draw=darkteal, line width=1.15pt] (m5a_s1-east) -- (14.65,4.70) -- (m5a_nll-north);
+\draw[->, draw=amber!90!black, line width=1.15pt] (m5a_s2-east) -- (14.65,2.55) -- (m5a_nll-south);
+\draw[->, draw=slate, line width=1.2pt] (m5a_nll-east) -- (m5a_out-west);
+
+\node[fill=softteal!85, draw=darkteal, line width=0.85pt, rounded corners=3pt, inner sep=3.5pt, text width=8.15cm, anchor=south west, font=\scriptsize]
+    at (9.37,0.18) {
+    $\mathcal{L}_{\mathrm{NLL}} = \frac{1}{2}\!\left[\frac{(\hat{\mu}_k-\mu_k)^2}{\hat{\sigma}_k^2} + \ln\hat{\sigma}_k^2\right] \implies R^2(\hat{\sigma}) = \mathbf{0.9966},\;\; \mathrm{MSE}(\hat{\sigma}) = 0.01488\text{ (\texttt{phylolm})}$
+};
+
+% ------------------------------------------------------------------------------
+% CELL 6 (BOTTOM-RIGHT): M5B_PhyloGNN_BayesMMSE (Proposed 2, Efron 2010 [20])
+% ------------------------------------------------------------------------------
+\filldraw[fill=white, draw=purple!85!black, line width=1.35pt, rounded corners=5pt] (18.30,0.00) rectangle (27.10,6.65);
+\node[fill=purple!90!black, text=white, rounded corners=3pt, inner sep=2.8pt, anchor=north west, font=\scriptsize\bfseries]
+    at (18.50,6.47) {6. \texttt{M5B\_PhyloGNN\_BayesMMSE}: Empirical Bayes};
+
+\pic[shift={(0,0,0)}] at (19.05,3.70) {
+    RightBandedBox={
+        name=m5b_in,
+        caption={$({\hat{\mu}}_{5A},{\hat{\sigma}}_{5A},\hat{s}_0)$},
+        xlabel={{4}},
+        ylabel=$B$,
+        fill=ConvColor,
+        bandfill=ConvReluColor,
+        height=12,
+        width={1.5},
+        depth=10
+    }
+};
+\pic[shift={(0,0,0)}] at (21.65,3.70) {
+    RightBandedBox={
+        name=m5b_mlp,
+        caption=$\mathrm{TN}_{[-5,5]} + \mathrm{MLP}$,
+        xlabel={{64,32,2}},
+        ylabel=$B$,
+        fill=FcReluColor,
+        bandfill=SoftmaxColor,
+        height=12,
+        width={1.3,1.3,1.2},
+        depth=10
+    }
+};
+\pic[shift={(0,0,0)}] at (24.35,3.70) {
+    Ball={name=m5b_sum, fill=SumColor, radius=2.0, logo=$\oplus$}
+};
+\pic[shift={(0,0,0)}] at (25.55,3.70) {
+    RightBandedBox={
+        name=m5b_out,
+        caption=$(\hat{\mu},\hat{\sigma})_{\mathcal{M}_{5B}}$,
+        xlabel={{2}},
+        ylabel=$B$,
+        fill=PurpleTensor,
+        bandfill=FcColor,
+        height=11,
+        width={1.5},
+        depth=9
+    }
+};
+
+\draw[->, draw=slate, line width=1.2pt] (m5b_in-east) -- (m5b_mlp-west);
+\draw[->, draw=slate, line width=1.2pt] (m5b_mlp-east) -- (m5b_sum-west);
+\draw[->, draw=purple!90!black, line width=1.35pt] (m5b_in-north) -- (19.50,5.55) -- (24.35,5.55) -- (m5b_sum-north);
+\draw[->, draw=slate, line width=1.2pt] (m5b_sum-east) -- (m5b_out-west);
+
+\node[fill=softpurple!85, draw=purple!85!black, line width=0.85pt, rounded corners=3pt, inner sep=3.5pt, text width=8.15cm, anchor=south west, font=\scriptsize]
+    at (18.52,0.18) {
+    $\hat{\mu}_{5B} = \mathbb{E}[\mu\mid\mathbf{x}_k]_{[-5,5]} \implies \mathbf{-30.2\%\;\mathrm{MSE}(\hat{\mu})\;(0.5311),\;\; -13.1\%\;\mathrm{MSE}(\hat{\sigma})\;(0.01293)}$
+};
+
+\end{tikzpicture}
+\end{document}

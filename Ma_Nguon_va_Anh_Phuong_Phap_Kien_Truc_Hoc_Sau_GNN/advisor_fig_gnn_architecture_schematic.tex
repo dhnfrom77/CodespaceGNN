@@ -1,0 +1,174 @@
+\documentclass[border=8pt,tikz]{standalone}
+\usepackage{fontspec}
+\usepackage{babel}
+\babelprovide[import, main]{vietnamese}
+\babelfont{rm}{Latin Modern Roman}
+\babelfont{sf}{Latin Modern Roman}
+\babelfont{tt}{Latin Modern Roman}
+\usepackage{tikz}
+\usepackage{Box}
+\usepackage{RightBandedBox}
+\usepackage{Ball}
+\usetikzlibrary{arrows.meta,calc,positioning}
+
+\begin{document}
+\begin{tikzpicture}
+
+% Outer Master Frame
+\filldraw[fill=white, draw=slate!45, line width=1.0pt, rounded corners=6pt] (0.00,0.00) rectangle (27.40,15.60);
+\node[fill=navy, text=white, rounded corners=3.5pt, inner sep=4.5pt, anchor=north west, font=\small\bfseries]
+    at (0.25,15.38) {Overall Architecture: 6-Tier GNN Hierarchy ($\mathcal{M}_1 \to \mathcal{M}_{5B}$) \& Dual-Stream Equivariant \texttt{PhyloGNN} on $\mathcal{G}_{\mathcal{T}}$ ($|V|=295, |E_{\mathrm{dir}}|=588$)};
+
+% ==============================================================================
+% ROW 1 (TOP): 1. BIDIRECTED GRAPH -> 2. DIRECTED TREE-MPNN -> 3A/3B DUAL READOUT
+% ==============================================================================
+
+% --- BOX 1 (TOP-LEFT): Bidirected Phylogenetic Graph G_T = (V, E_dir) ---
+\filldraw[fill=softblue!55, draw=navy!85, line width=1.05pt, rounded corners=5pt]
+    (0.25,10.05) rectangle (8.45,14.65);
+\node[fill=navy, text=white, rounded corners=2.5pt, inner sep=3pt, anchor=north west, font=\scriptsize\bfseries]
+    at (0.42,14.48) {1. Bidirected Graph $\mathcal{G}_{\mathcal{T}} = (V, E_{\mathrm{dir}})$ (\texttt{PyG Data})};
+
+\node[fill=white, draw=navy!45, rounded corners=3pt, inner sep=4pt, text width=7.65cm, anchor=north west, font=\scriptsize]
+    at (0.42,13.78) {
+    $\bullet\;\; |V| = 295\;\big(V_{\mathrm{leaf}}=\{0,\dots,147\},\; V_{\mathrm{int}}=\{148,\dots,294\}\big)$\\[3pt]
+    $\bullet\;\; |E_{\mathrm{dir}}| = 588\;\big(e_\uparrow=(v\to u,\,+1)\;\oplus\; e_\downarrow=(u\to v,\,-1)\big)$\\[3pt]
+    $\bullet\;\; \mathbf{X}_k \in \mathbb{R}^{295\times 6}:\; \big[x_{k,v}^{\mathrm{obs}},\, \delta_{k,v},\, m_v^{\mathrm{leaf}},\, r_v^{\mathrm{root}},\, T_v,\, \tilde{d}_v\big]$\\[2pt]
+    $\phantom{\bullet\;\;}\big(\delta_{k,v}=x_{k,v}^{\mathrm{obs}}-\bar{x}_k;\; x_{k,u}^{\mathrm{obs}}=\delta_{k,u}=0\;\forall u\in V_{\mathrm{int}}\big)$\\[3pt]
+    $\bullet\;\; \mathbf{E} \in \mathbb{R}^{588\times 4}:\; \big[\Delta t_e,\, (\Delta t_e+10^{-3})^{-1},\, \ln\Delta t_e,\, \mathrm{dir}_e\big]$
+};
+
+% --- BOX 2 (TOP-CENTER): DirectedBottomUpTreeMPNNLayer (M4, M5A, M5B) ---
+\filldraw[fill=softteal!65, draw=darkteal!90, line width=1.05pt, rounded corners=5pt]
+    (9.05,10.05) rectangle (17.55,14.65);
+\node[fill=darkteal, text=white, rounded corners=2.5pt, inner sep=3pt, anchor=north west, font=\scriptsize\bfseries]
+    at (9.22,14.48) {2. \texttt{DirectedBottomUpTreeMPNNLayer} ($u = 148 \to 294$)};
+
+\node[fill=white, draw=darkteal!50, rounded corners=3pt, inner sep=3.8pt, anchor=north west, font=\scriptsize]
+    at (9.22,13.78) {
+    $\begin{array}{@{}l@{}}
+    \bullet\;\; \textbf{Precision Gates:}\;\; d_L = (v_l + \Delta t_l)e^{g_{L,u}},\;\; d_R = (v_r + \Delta t_r)e^{g_{R,u}}\\[4.5pt]
+    \bullet\;\; \textbf{Convex Node State (Stream 2):}\\[2pt]
+    \phantom{\bullet\;\;} H_{k,u} = \dfrac{d_R(u)H_{k,l} + d_L(u)H_{k,r}}{d_L(u) + d_R(u)},\quad v_u = \dfrac{d_L(u)d_R(u)}{d_L(u) + d_R(u)}\\[4.5pt]
+    \bullet\;\; \textbf{Standardized Contrast (Stream 1):}\\[2pt]
+    \phantom{\bullet\;\;} C_{k,u} = \dfrac{H_{k,l} - H_{k,r}}{\sqrt{d_L(u) + d_R(u)}} \stackrel{\mathrm{i.i.d.}}{\sim} \mathcal{N}(0, \sigma_k^2) \;\perp\; \mu_k
+    \end{array}$
+};
+
+% Arrow Box 1 -> Box 2
+\draw[->, draw=navy, line width=1.65pt] (8.45,12.35) -- (9.05,12.35);
+
+% --- BOX 3A (TOP-RIGHT UPPER): Stream 1 — Translation-Invariant Scale Head ---
+\filldraw[fill=softamber!80, draw=amber!90!black, line width=1.05pt, rounded corners=5pt]
+    (18.25,12.50) rectangle (27.15,14.65);
+\node[fill=amber!90!black, text=white, rounded corners=2.5pt, inner sep=2.5pt, anchor=north west, font=\scriptsize\bfseries]
+    at (18.42,14.48) {3A. Stream 1 (\texttt{QuadraticContrastScaleHead}): $\hat{\sigma}_k \perp \mu_k$};
+
+\node[anchor=north west, font=\scriptsize] at (18.42,13.82) {
+    $\begin{array}{@{}l@{}}
+    \bullet\;\; \hat{\sigma}_{k,\mathcal{M}_{5A}} = \gamma_{c_4}\sqrt{\textstyle\sum_{u=148}^{294} w_{\sigma,u}\, C_{k,u}^2},\;\; \mathbf{w}_\sigma \in \Delta^{146},\;\; \gamma_{c_4}\approx c_4^{-1}\\[4pt]
+    \bullet\;\; \mathbf{x}_k + c\mathbf{1}_{148} \;\mapsto\; \hat{\sigma}_{k,\mathcal{M}_{5A}}\quad (\text{Translation-Invariant, }\mathrm{df}=147)
+    \end{array}$
+};
+
+% --- BOX 3B (TOP-RIGHT LOWER): Stream 2 — Translation-Equivariant Location Head ---
+\filldraw[fill=softpurple!80, draw=purple!90!black, line width=1.05pt, rounded corners=5pt]
+    (18.25,10.05) rectangle (27.15,12.22);
+\node[fill=purple!90!black, text=white, rounded corners=2.5pt, inner sep=2.5pt, anchor=north west, font=\scriptsize\bfseries]
+    at (18.42,12.06) {3B. Stream 2 (\texttt{EquivariantRootLocationHead}): $\hat{\mu}_k + c$};
+
+\node[anchor=north west, font=\scriptsize] at (18.42,11.42) {
+    $\begin{array}{@{}l@{}}
+    \bullet\;\; \hat{\mu}_{k,\mathcal{M}_{5A}} = H_{k,294} + \textstyle\sum_{u=148}^{293} w_{\mu,u}\,(H_{k,u} - H_{k,294})\;\; \big(H_{294}=\hat{\mu}_{\mathrm{GLS}}\big)\\[3.5pt]
+    \bullet\;\; \mathcal{L}_{\mathrm{NLL}} = \frac{1}{2}\!\left[\frac{(\hat{\mu}_k-\mu_k)^2}{\hat{\sigma}_k^2} + \ln\hat{\sigma}_k^2\right] + \lambda_\sigma(\hat{\sigma}_k-\sigma_k)^2 + \lambda_{\mathrm{rel}}\!\left(\frac{\hat{\sigma}_k-\sigma_k}{\sigma_k}\right)^2
+    \end{array}$
+};
+
+% Arrows Box 2 -> Box 3A & Box 3B
+\draw[->, draw=amber!90!black, line width=1.55pt] (17.55,13.10) -- (18.25,13.55);
+\draw[->, draw=purple!90!black, line width=1.55pt] (17.55,11.60) -- (18.25,11.15);
+
+% ==============================================================================
+% ROW 2 (MIDDLE): 4. SIX-TIER GNN ABLATION -> 5. EMPIRICAL-BAYES SHRINKAGE HEAD
+% ==============================================================================
+
+% --- BOX 4 (MIDDLE-LEFT): 6-Tier GNN Architectural Ablation (M1 -> M5B) ---
+\filldraw[fill=softamber!45, draw=amber!85!black, line width=1.05pt, rounded corners=5pt]
+    (0.25,4.95) rectangle (13.35,9.45);
+\node[fill=amber!90!black, text=white, rounded corners=2.5pt, inner sep=3pt, anchor=north west, font=\scriptsize\bfseries]
+    at (0.42,9.28) {4. Six-Tier GNN Architectural Ablation Hierarchy ($\mathcal{M}_1 \to \mathcal{M}_{5B}$, \texttt{Test\_1000})};
+
+\node[fill=white, draw=amber!60!black, rounded corners=3pt, inner sep=3.5pt, anchor=north west, font=\scriptsize]
+    at (0.42,8.58) {
+    $\begin{array}{@{}l@{\;\;}l@{\;\;}l@{}}
+    \mathbf{Model} & \mathbf{Inductive\;Bias / Loss} & \mathbf{Test\_1000\;Metrics} \\\hline
+    \rule{0pt}{9pt}\mathcal{M}_1\;(\texttt{DeepSets}) & E = \emptyset\;\text{(Point Cloud MLP)} & \mathrm{MSE}(\hat{\mu})=0.6844,\; R^2(\hat{\sigma})=0.5686 \\
+    \mathcal{M}_2\;(\texttt{GCN}) & \Delta t_e \equiv 1\;\text{(Unweighted Graph)} & \mathrm{MSE}(\hat{\mu})=0.5859,\; R^2(\hat{\sigma})=0.8867 \\
+    \mathcal{M}_3\;(\texttt{GINE}) & u \leftrightarrow v\;\text{(Isotropic + }0\text{-Leak)} & \mathrm{MSE}(\hat{\mu})=0.5472,\; R^2(\hat{\sigma})=0.9790 \\
+    \mathcal{M}_4\;(\texttt{RawMSE}) & v \to u\;\text{Postorder + }\mathcal{L}_{\mathrm{MSE}} & \mathrm{MSE}(\hat{\mu})=0.7933,\; R^2(\hat{\sigma})=0.9965 \\
+    \mathcal{M}_{5A}\;(\texttt{PhyloGNN}) & \text{Dual-Stream + }\hat{\sigma}_k^{-2}\;\mathcal{L}_{\mathrm{NLL}} & \mathrm{MSE}(\hat{\mu})=0.7584,\; R^2(\hat{\sigma})=\mathbf{0.9966} \\
+    \textcolor{darkgreen}{\mathbf{\mathcal{M}_{5B}\;(\texttt{BayesMMSE})}} & \textcolor{darkgreen}{\mathbf{\mathcal{M}_{5A} + \mathrm{TN}_{[-5,5]}\;\text{\textbf{\& Grid}}_{250}}} & \textcolor{darkgreen}{\mathbf{\mathrm{MSE}(\hat{\mu})=0.5311\;(-30.2\%)}}
+    \end{array}$
+};
+
+% --- BOX 5 (MIDDLE-RIGHT): Amortized Empirical-Bayes Shrinkage Head (M5B) ---
+\filldraw[fill=softgreen!75, draw=darkgreen!90, line width=1.05pt, rounded corners=5pt]
+    (13.95,4.95) rectangle (27.15,9.45);
+\node[fill=darkgreen, text=white, rounded corners=2.5pt, inner sep=3pt, anchor=north west, font=\scriptsize\bfseries]
+    at (14.12,9.28) {5. \texttt{AmortizedEmpiricalBayesShrinkageHead} ($\mathcal{M}_{5B}$ — Efron 2010; Robbins 1956)};
+
+\node[fill=white, draw=darkgreen!55, rounded corners=3pt, inner sep=3.8pt, anchor=north west, font=\scriptsize]
+    at (14.12,8.58) {
+    $\begin{array}{@{}l@{}}
+    \bullet\;\; \textbf{Root Noise Scale:}\;\; \hat{s}_{0,k} = \hat{\sigma}_{5A}\sqrt{v_\rho / N} = 0.4496\,\hat{\sigma}_{5A}/\sqrt{N},\quad \alpha_k = \frac{-5-\hat{\mu}_{5A}}{\hat{s}_{0,k}},\quad \beta_k = \frac{5-\hat{\mu}_{5A}}{\hat{s}_{0,k}}\\[4pt]
+    \bullet\;\; \textbf{1D Truncated-Normal Posterior Location Readout on }[-5,5]\textbf{ + Residual MLP:}\\[2pt]
+    \phantom{\bullet\;\;} \hat{\mu}_{k,\mathcal{M}_{5B}} = \mathrm{clip}_{[-5,5]}\!\left(\hat{\mu}_{5A} + \gamma_\mu\,\hat{s}_{0,k}\dfrac{\phi(\alpha_k)-\phi(\beta_k)}{\Phi(\beta_k)-\Phi(\alpha_k)} + \hat{s}_{0,k}\,\delta_{\mu,\mathrm{MLP}}(\mathbf{z}_k)\right) \implies \mathbf{-30.18\%\;\mathrm{MSE}(\hat{\mu})}\\[4pt]
+    \bullet\;\; \textbf{250-Point Log-Normal Prior }\pi(\sigma_g)\times\chi^2_{147}\textbf{ Quadrature \& }N\textbf{-Tree Cohort Updating:}\\[2pt]
+    \phantom{\bullet\;\;} \hat{\sigma}_{k,\mathcal{M}_{5B}} = (1-\gamma_\sigma)\hat{\sigma}_{5A} + \gamma_\sigma\textstyle\sum_{g=1}^{250} w_{k,g}\sigma_g,\quad N=10^5 \implies |\hat{\mu}_{(N)}-\mu^*| = \mathbf{0.000418}\;(0.013\%)
+    \end{array}$
+};
+
+% Arrows into Box 5 (from Box 3B top and Box 4 left)
+\draw[->, draw=purple!90!black, line width=1.65pt] (22.70,10.05) -- (22.70,9.45);
+\draw[->, draw=amber!90!black, line width=1.65pt] (13.35,7.20) -- (13.95,7.20);
+
+% ==============================================================================
+% ROW 3 (BOTTOM): 6A. CLASSICAL GOLD STANDARD phylolm <-> 6B. POST-BM SBI
+% ==============================================================================
+
+% --- BOX 6A (BOTTOM-LEFT): Classical Gold Standard phylolm O(n) 3-Point Pruning ---
+\filldraw[fill=lightgray, draw=slate!85, line width=1.05pt, rounded corners=5pt]
+    (0.25,0.35) rectangle (13.35,4.35);
+\node[fill=slate, text=white, rounded corners=2.5pt, inner sep=3pt, anchor=north west, font=\scriptsize\bfseries]
+    at (0.42,4.18) {6A. Classical Gold Standard: \texttt{phylolm} $\mathcal{O}(n)$ 3-Point Pruning (Ho \& Ané, 2014 [3])};
+
+\node[fill=white, draw=slate!45, rounded corners=3pt, inner sep=3.8pt, anchor=north west, font=\scriptsize]
+    at (0.42,3.48) {
+    $\begin{array}{@{}l@{}}
+    \bullet\;\; \textbf{Postorder 6-Register Recursion }(v = 0 \to 294):\;\; \mathrm{denom}_u = 1 + t_u(\mathrm{vec11}_l + \mathrm{vec11}_r),\;\; \mathcal{O}(n)\text{ time}\\[4pt]
+    \bullet\;\; \textbf{Simultaneous Readout }(147\text{ DOF}):\;\; \hat{\mu}_{\mathrm{phylolm}} = \dfrac{P_{1,\rho}}{\mathrm{vec11}_\rho},\;\; Q_{\mathrm{int}} = PP_\rho - \dfrac{P_{1,\rho}^2}{\mathrm{vec11}_\rho},\;\; \hat{\sigma}_{\mathrm{REML}} = \sqrt{\dfrac{Q_{\mathrm{int}}}{147}}\\[4pt]
+    \bullet\;\; \textbf{Exact Isomorphism:}\;\; \max_k|\hat{\mu}_{\mathrm{phylolm}} - \hat{\mu}_{\mathrm{Cholesky}}| = 3.55\times 10^{-15};\;\; r(\hat{\sigma}_{\mathcal{M}_{5A}}, \hat{\sigma}_{\mathrm{phylolm}}) = \mathbf{1.000000}
+    \end{array}$
+};
+
+% --- BOX 6B (BOTTOM-RIGHT): Plug-and-Play Post-BM SBI Extension ---
+\filldraw[fill=softred!65, draw=crimson!85!black, line width=1.05pt, rounded corners=5pt]
+    (13.95,0.35) rectangle (27.15,4.35);
+\node[fill=crimson!90!black, text=white, rounded corners=2.5pt, inner sep=3pt, anchor=north west, font=\scriptsize\bfseries]
+    at (14.12,4.18) {6B. Plug-and-Play Post-BM Simulation-Based Inference (SBI) Extension [22--30]};
+
+\node[fill=white, draw=crimson!50, rounded corners=3pt, inner sep=3.8pt, anchor=north west, font=\scriptsize]
+    at (14.12,3.48) {
+    $\begin{array}{@{}l@{}}
+    \bullet\;\; \textbf{Post-BM SDEs:}\;\; \mathrm{OU}\;\big(\mathrm{d}X_t = \alpha(\theta-X_t)\mathrm{d}t + \sigma\mathrm{d}W_t\big),\;\; \mathrm{Bounded\;BM}\;(X_t\in[a,b]),\;\; \text{Lévy Jumps }\mathrm{d}J_t\\[4pt]
+    \bullet\;\; \textbf{Analytical Limit:}\;\; \text{Closed-form Cholesky }\mathbf{S}^{-1}\text{ \& PIC break down when }p(\mathbf{X}\mid\boldsymbol{\theta})\text{ has no closed form}\\[4pt]
+    \bullet\;\; \textbf{100\% Reusable GNN:}\;\; \mathcal{G}_{\mathcal{T}}\;(295\text{ nodes}) + \texttt{TreeMPNN} + \mathcal{M}_{5B} \;\mapsto\; \hat{\boldsymbol{\theta}}_{\mathrm{MMSE}}(\mathbf{X}) \approx \mathbb{E}[\boldsymbol{\theta}\mid\mathbf{X}]\;\;(\mathbf{41.2\text{ \textbf{ms}}})
+    \end{array}$
+};
+
+% Bidirectional Equivalence & Transfer Arrow between Row 2 and Row 3
+\draw[<->, draw=slate, line width=1.45pt, dashed] (6.80,4.95) -- (6.80,4.35);
+\draw[->, draw=crimson!90!black, line width=1.55pt] (20.55,4.95) -- (20.55,4.35);
+
+\end{tikzpicture}
+\end{document}

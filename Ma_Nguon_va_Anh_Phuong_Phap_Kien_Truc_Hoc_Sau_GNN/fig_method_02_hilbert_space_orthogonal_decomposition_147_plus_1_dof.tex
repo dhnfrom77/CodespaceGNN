@@ -1,0 +1,177 @@
+\documentclass[border=8pt,tikz]{standalone}
+\usepackage{fontspec}
+\usepackage{babel}
+\babelprovide[import, main]{vietnamese}
+\babelfont{rm}{Latin Modern Roman}
+\babelfont{sf}{Latin Modern Roman}
+\babelfont{tt}{Latin Modern Roman}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,calc,positioning,backgrounds}
+
+\definecolor{navy}{HTML}{0F2C59}
+\definecolor{deepblue}{HTML}{1D4ED8}
+\definecolor{teal}{HTML}{0D9488}
+\definecolor{darkteal}{HTML}{0F766E}
+\definecolor{crimson}{HTML}{DC2626}
+\definecolor{amber}{HTML}{D97706}
+\definecolor{gold}{HTML}{F59E0B}
+\definecolor{purple}{HTML}{6D28D9}
+\definecolor{slate}{HTML}{334155}
+\definecolor{lightgray}{HTML}{F8FAFC}
+\definecolor{softblue}{HTML}{EEF4FE}
+\definecolor{softteal}{HTML}{EBF9F6}
+\definecolor{softred}{HTML}{FEF0F0}
+\definecolor{softamber}{HTML}{FEF7E6}
+
+\begin{document}
+\begin{tikzpicture}
+
+% ==============================================================================
+% PANEL (A): HILBERT SPACE GEOMETRY (R^148, <u,v>_{S^{-1}})
+% ==============================================================================
+\filldraw[fill=white, draw=slate!45, line width=0.95pt, rounded corners=5pt] (0.00,0.00) rectangle (12.40,9.40);
+\node[fill=navy, text=white, rounded corners=3pt, inner sep=4pt, anchor=north west, font=\small\bfseries]
+    at (0.20,9.20) {(A) $\mathcal{H} = \left(\mathbb{R}^{148},\, \langle \mathbf{u}, \mathbf{v} \rangle_{\mathbf{S}^{-1}}\right),\quad \mathbb{R}^{148} = \mathcal{V}_{\mathrm{int}}\; (147\text{ DOF}) \;\oplus_{\mathbf{S}^{-1}}\; \mathcal{V}_{\mathrm{root}}\; (1\text{ DOF})$};
+
+% 1. Tilted 147-DOF Hyperplane V_int
+\filldraw[fill=teal!11, draw=teal!80!black, line width=1.15pt]
+    (0.60,2.15) -- (9.40,2.15) -- (11.85,5.15) -- (3.05,5.15) -- cycle;
+
+\draw[draw=teal!32, line width=0.55pt] (2.36,2.15) -- (4.81,5.15);
+\draw[draw=teal!32, line width=0.55pt] (4.12,2.15) -- (6.57,5.15);
+\draw[draw=teal!32, line width=0.55pt] (5.88,2.15) -- (8.33,5.15);
+\draw[draw=teal!32, line width=0.55pt] (7.64,2.15) -- (10.09,5.15);
+\draw[draw=teal!32, line width=0.55pt] (1.21,2.90) -- (10.01,2.90);
+\draw[draw=teal!32, line width=0.55pt] (1.82,3.65) -- (10.62,3.65);
+\draw[draw=teal!32, line width=0.55pt] (2.44,4.40) -- (11.24,4.40);
+
+\draw[draw=teal!60, line width=0.75pt, dashed] (4.35,3.65) ellipse (2.45cm and 0.75cm);
+\draw[draw=teal!42, line width=0.65pt, dotted] (4.35,3.65) ellipse (3.70cm and 1.10cm);
+
+\node[fill=white, fill opacity=0.92, text opacity=1, draw=darkteal!45, rounded corners=2pt, inner sep=1.8pt, text=darkteal, anchor=south west, font=\scriptsize\bfseries] at (1.35,2.22)
+    {$\mathcal{V}_{\mathrm{int}} = \{\mathbf{r} \in \mathbb{R}^{148} : \mathbf{1}_{148}^\top \mathbf{S}^{-1}\mathbf{r} = 0\}\; (\mathrm{df}=147)$};
+
+% Orthonormal PIC basis {C_1, ..., C_147}
+\draw[->, draw=darkteal, line width=1.05pt] (2.45,3.85) -- (3.35,3.85);
+\draw[->, draw=darkteal, line width=1.05pt] (2.45,3.85) -- (2.88,4.42);
+\node[text=darkteal, anchor=west, font=\scriptsize\bfseries] at (3.38,3.85) {$C_1$};
+\node[text=darkteal, anchor=south, font=\scriptsize\bfseries] at (2.88,4.44) {$C_{147}$};
+
+% 2. 1-DOF Root Axis V_root = span(1_148)
+\draw[draw=crimson!50, line width=1.1pt, dashed] (4.35,1.60) -- (4.35,3.65);
+\draw[->, draw=crimson!85!black, line width=1.35pt] (4.35,3.65) -- (4.35,8.05);
+\node[text=crimson!90!black, anchor=south, font=\footnotesize\bfseries] at (4.35,8.08)
+    {$\mathcal{V}_{\mathrm{root}} = \mathrm{span}(\mathbf{1}_{148})\; (\mathrm{df}=1)$};
+
+% 3. Right-Angle Symbol & Orthogonal Vector Triangle
+\filldraw[fill=navy!14, draw=navy, line width=0.95pt]
+    (4.35,3.65) -- (4.35,4.08) -- (4.80,4.15) -- (4.80,3.72) -- cycle;
+\node[text=navy, anchor=south west, font=\scriptsize\bfseries] at (4.80,4.06) {$\perp_{\mathbf{S}^{-1}}$};
+
+% Horizontal Leg r_int
+\draw[->, draw=darkteal, line width=2.2pt] (4.35,3.65) -- (9.35,4.42);
+\node[fill=white, draw=teal!60, rounded corners=2pt, inner sep=2pt, text=darkteal, anchor=north, font=\footnotesize\bfseries]
+    at (7.05,3.85) {$\mathbf{r}_{\mathrm{int}} = \mathbf{x} - \hat{\mu}_{\mathrm{GLS}}\mathbf{1}_{148}\; (147\text{ DOF})$};
+
+% Vertical Leg r_root
+\draw[->, draw=crimson, line width=2.2pt] (4.35,7.35) -- (4.35,3.73);
+\node[fill=white, draw=crimson!60, rounded corners=2pt, inner sep=2pt, text=crimson!90!black, anchor=east, font=\footnotesize\bfseries]
+    at (4.20,5.65) {$\mathbf{r}_{\mathrm{root}} = (\hat{\mu}_{\mathrm{GLS}} - \mu)\mathbf{1}_{148}\; (1\text{ DOF})$};
+
+% Hypotenuse x - mu 1_148
+\draw[->, draw=amber!90!black, line width=2.2pt] (4.35,7.35) -- (9.30,4.47);
+\node[fill=white, draw=amber!80!black, rounded corners=2pt, inner sep=2pt, text=amber!90!black, anchor=south west, font=\footnotesize\bfseries]
+    at (6.65,6.05) {$\mathbf{x} - \mu\mathbf{1}_{148}\; (Q_0,\, 148\text{ DOF})$};
+
+% Vertices (M, F, X)
+\filldraw[fill=navy, draw=white, line width=0.9pt] (4.35,7.35) circle (3.2pt);
+\node[fill=white, inner sep=1.2pt, text=navy, anchor=west, font=\footnotesize\bfseries] at (4.50,7.40) {$\mu\mathbf{1}_{148}$};
+
+\filldraw[fill=crimson, draw=white, line width=0.9pt] (4.35,3.65) circle (3.4pt);
+\node[fill=white, inner sep=1.2pt, text=crimson!90!black, anchor=north east, font=\footnotesize\bfseries] at (4.25,3.55)
+    {$\hat{\mu}_{\mathrm{GLS}}\mathbf{1}_{148} = \mathbf{P}_{\mathrm{root}}\mathbf{x}$};
+
+\filldraw[fill=darkteal, draw=white, line width=0.9pt] (9.35,4.42) circle (3.4pt);
+\node[fill=white, inner sep=1.2pt, text=navy, anchor=south, font=\footnotesize\bfseries] at (9.35,4.55) {$\mathbf{x} \in \mathbb{R}^{148}$};
+
+% Bottom Pure-Math Equation Box in Panel (A)
+\node[fill=lightgray, draw=slate!45, rounded corners=4pt, inner sep=4.5pt, text width=11.6cm, anchor=south, font=\footnotesize]
+    at (6.20,0.20) {
+    $\displaystyle Q_0(\mathbf{x},\mu) = \|\mathbf{x} - \mu\mathbf{1}\|_{\mathbf{S}^{-1}}^2 = \underbrace{(\mathbf{x} - \hat{\mu}_{\mathrm{GLS}}\mathbf{1})^\top \mathbf{S}^{-1}(\mathbf{x} - \hat{\mu}_{\mathrm{GLS}}\mathbf{1})}_{Q_{\mathrm{internal}}(\mathbf{x})\; (\mathrm{df}=147)} + \underbrace{\mathrm{vec11}\cdot(\hat{\mu}_{\mathrm{GLS}}(\mathbf{x}) - \mu)^2}_{Q_{\mathrm{root}}(\mathbf{x},\mu)\; (\mathrm{df}=1)}$
+};
+
+% ==============================================================================
+% PANEL (B): ORTHOGONAL SUFFICIENCY SPLIT (PURE SYMBOLS & EQUATIONS)
+% ==============================================================================
+\filldraw[fill=white, draw=slate!45, line width=0.95pt, rounded corners=5pt] (12.65,0.00) rectangle (25.25,9.40);
+\node[fill=navy, text=white, rounded corners=3pt, inner sep=4pt, anchor=north west, font=\small\bfseries]
+    at (12.85,9.20) {(B) $\hat{\mu}_{\mathrm{GLS}}(\mathbf{x}) \perp\!\!\!\perp Q_{\mathrm{internal}}(\mathbf{x}) \;\implies\; (\hat{\mu}, \hat{\sigma}) \mid \mathbf{x}$};
+
+% Input vector node
+\node[fill=softblue, draw=navy, line width=1.05pt, rounded corners=4pt, inner sep=5pt, anchor=center, font=\footnotesize\bfseries]
+    at (13.85,4.95) {$\begin{array}{c}\mathbf{x} \in \mathbb{R}^{148}\\(\mu,\sigma)\text{ ẩn}\end{array}$};
+
+% Top Stream Card: Location (1 DOF, pure math only)
+\node[fill=softred, draw=crimson!85!black, line width=1.0pt, rounded corners=4pt, inner sep=5.5pt, text width=5.6cm, anchor=west, font=\footnotesize]
+    at (15.75,6.85) {
+    {\bfseries\color{crimson!90!black} $\mathcal{V}_{\mathrm{root}}$ ($\mathrm{df}=1$ --- Location $\hat{\mu} \perp \sigma$):}\\[3pt]
+    $\hat{\mu}_{\mathrm{GLS}}(\mathbf{x}) = \mathbf{w}_{\mathrm{GLS}}^\top\mathbf{x} = \frac{\mathbf{1}^\top\mathbf{S}^{-1}\mathbf{x}}{\mathrm{vec11}}$\\[3pt]
+    $\mathbf{x} + c\mathbf{1}_{148} \;\mapsto\; \hat{\mu}_{\mathrm{GLS}} + c$\\[3pt]
+    $\mathrm{CRLB}(\hat{\mu}) = \sigma^2 v_\rho = 0.2022\,\sigma^2$
+};
+
+% Gaussian Density Plot
+\draw[->, draw=slate, line width=0.85pt] (22.05,5.75) -- (24.90,5.75);
+\draw[->, draw=slate, line width=0.85pt] (22.05,5.75) -- (22.05,8.05);
+\fill[fill=crimson!18] (22.20,5.76) -- (22.28,5.77) -- (22.37,5.79) -- (22.45,5.82) -- (22.53,5.87) -- (22.62,5.94) -- (22.70,6.05) -- (22.78,6.19) -- (22.87,6.38) -- (22.95,6.60) -- (23.03,6.84) -- (23.12,7.10) -- (23.20,7.33) -- (23.28,7.53) -- (23.37,7.66) -- (23.45,7.70) -- (23.53,7.66) -- (23.62,7.53) -- (23.70,7.33) -- (23.78,7.10) -- (23.87,6.84) -- (23.95,6.60) -- (24.03,6.38) -- (24.12,6.19) -- (24.20,6.05) -- (24.28,5.94) -- (24.37,5.87) -- (24.45,5.82) -- (24.53,5.79) -- (24.62,5.77) -- (24.70,5.76) -- (24.70,5.75) -- (22.20,5.75) -- cycle;
+\draw[draw=crimson!90!black, line width=1.45pt] (22.20,5.76) -- (22.28,5.77) -- (22.37,5.79) -- (22.45,5.82) -- (22.53,5.87) -- (22.62,5.94) -- (22.70,6.05) -- (22.78,6.19) -- (22.87,6.38) -- (22.95,6.60) -- (23.03,6.84) -- (23.12,7.10) -- (23.20,7.33) -- (23.28,7.53) -- (23.37,7.66) -- (23.45,7.70) -- (23.53,7.66) -- (23.62,7.53) -- (23.70,7.33) -- (23.78,7.10) -- (23.87,6.84) -- (23.95,6.60) -- (24.03,6.38) -- (24.12,6.19) -- (24.20,6.05) -- (24.28,5.94) -- (24.37,5.87) -- (24.45,5.82) -- (24.53,5.79) -- (24.62,5.77) -- (24.70,5.76);
+\draw[draw=crimson!90!black, line width=0.9pt, dashed] (23.45,5.75) -- (23.45,7.70);
+\node[text=crimson!90!black, anchor=north, font=\scriptsize\bfseries] at (23.45,5.70) {$\mu$};
+\node[text=crimson!90!black, anchor=south, font=\scriptsize\bfseries] at (23.55,7.75) {$\mathcal{N}(\mu, \sigma^2 v_\rho)$};
+\node[text=slate, anchor=north east, font=\scriptsize\bfseries] at (24.90,5.68) {$\hat{\mu}$};
+
+% Bottom Stream Card: Scale (147 DOF, pure math only)
+\node[fill=softteal, draw=darkteal, line width=1.0pt, rounded corners=4pt, inner sep=5.5pt, text width=5.6cm, anchor=west, font=\footnotesize]
+    at (15.75,3.05) {
+    {\bfseries\color{darkteal} $\mathcal{V}_{\mathrm{int}}$ ($\mathrm{df}=147$ --- Scale $\hat{\sigma} \perp \mu$):}\\[3pt]
+    $Q_{\mathrm{internal}}(\mathbf{x}) = \sum_{u=1}^{147} C_u^2,\quad C_u \stackrel{\mathrm{i.i.d.}}{\sim} \mathcal{N}(0,\sigma^2)$\\[3pt]
+    $\mathbf{x} + c\mathbf{1}_{148} \;\mapsto\; Q_{\mathrm{internal}}(\mathbf{x})$\\[3pt]
+    $\hat{\sigma}_{\mathrm{REML}} = \sqrt{Q_{\mathrm{internal}}(\mathbf{x}) / 147}$
+};
+
+% Chi-square Density Plot
+\draw[->, draw=slate, line width=0.85pt] (22.05,1.95) -- (24.90,1.95);
+\draw[->, draw=slate, line width=0.85pt] (22.05,1.95) -- (22.05,4.25);
+\fill[fill=teal!20] (22.20,2.00) -- (22.28,2.03) -- (22.37,2.08) -- (22.45,2.15) -- (22.53,2.25) -- (22.62,2.38) -- (22.70,2.54) -- (22.78,2.73) -- (22.87,2.94) -- (22.95,3.17) -- (23.03,3.39) -- (23.12,3.58) -- (23.20,3.73) -- (23.28,3.83) -- (23.37,3.85) -- (23.45,3.80) -- (23.53,3.68) -- (23.62,3.51) -- (23.70,3.30) -- (23.78,3.08) -- (23.87,2.86) -- (23.95,2.65) -- (24.03,2.47) -- (24.12,2.32) -- (24.20,2.21) -- (24.28,2.12) -- (24.37,2.06) -- (24.45,2.02) -- (24.53,1.99) -- (24.62,1.97) -- (24.70,1.96) -- (24.70,1.95) -- (22.20,1.95) -- cycle;
+\draw[draw=darkteal, line width=1.45pt] (22.20,2.00) -- (22.28,2.03) -- (22.37,2.08) -- (22.45,2.15) -- (22.53,2.25) -- (22.62,2.38) -- (22.70,2.54) -- (22.78,2.73) -- (22.87,2.94) -- (22.95,3.17) -- (23.03,3.39) -- (23.12,3.58) -- (23.20,3.73) -- (23.28,3.83) -- (23.37,3.85) -- (23.45,3.80) -- (23.53,3.68) -- (23.62,3.51) -- (23.70,3.30) -- (23.78,3.08) -- (23.87,2.86) -- (23.95,2.65) -- (24.03,2.47) -- (24.12,2.32) -- (24.20,2.21) -- (24.28,2.12) -- (24.37,2.06) -- (24.45,2.02) -- (24.53,1.99) -- (24.62,1.97) -- (24.70,1.96);
+\draw[draw=darkteal, line width=0.9pt, dashed] (23.35,1.95) -- (23.35,3.85);
+\node[text=darkteal, anchor=north, font=\scriptsize\bfseries] at (23.35,1.90) {$147$};
+\node[text=darkteal, anchor=south, font=\scriptsize\bfseries] at (23.55,3.90) {$\chi^2_{147}\; (\mathrm{df}=n-1)$};
+\node[text=slate, anchor=north east, font=\scriptsize\bfseries] at (24.95,1.88) {$Q_{\mathrm{int}}/\sigma^2$};
+
+% Projector arrows from Input x
+\draw[->, draw=crimson!90!black, line width=1.5pt]
+    (14.80,5.35) .. controls (15.15,6.35) and (15.35,6.75) .. (15.75,6.85);
+\node[text=crimson!90!black, anchor=east, font=\scriptsize\bfseries] at (15.20,6.40) {$\mathbf{P}_{\mathrm{root}}$};
+
+\draw[->, draw=darkteal, line width=1.5pt]
+    (14.80,4.55) .. controls (15.15,3.55) and (15.35,3.15) .. (15.75,3.05);
+\node[text=darkteal, anchor=east, font=\scriptsize\bfseries] at (15.20,3.50) {$\mathbf{I} - \mathbf{P}_{\mathrm{root}}$};
+
+% Central Basu / Fisher-Cochran Independence Badge
+\node[fill=softamber, draw=navy, line width=1.0pt, rounded corners=8pt, inner sep=4pt, anchor=center, font=\footnotesize\bfseries, text=navy]
+    at (18.75,4.95) {$\mathrm{Cov}\!\left(\hat{\mu}_{\mathrm{GLS}}\mathbf{1}_{148},\, \mathbf{r}_{\mathrm{int}}\right) = \mathbf{0} \;\iff\; \hat{\mu}_{\mathrm{GLS}}(\mathbf{x}) \perp\!\!\!\perp Q_{\mathrm{internal}}(\mathbf{x})$};
+\draw[<->, draw=navy, line width=0.95pt, dashed] (18.75,5.38) -- (18.75,5.68);
+\draw[<->, draw=navy, line width=0.95pt, dashed] (18.75,4.22) -- (18.75,4.52);
+
+% Bottom 1-line equation box in Panel (B)
+\node[fill=softblue, draw=navy!70, rounded corners=4pt, inner sep=4.5pt, text width=11.8cm, anchor=south, font=\footnotesize]
+    at (18.95,0.20) {
+    $\text{\texttt{phylolm} \& \texttt{PhyloGNN\_M5A}:}\;\;
+    \hat{\mu}(\mathbf{x}) = \mathbf{w}_\mu^\top\mathbf{H}_{\mathrm{nodes}} \;\perp\; \sigma
+    \;\;\;\oplus\;\;\;
+    \hat{\sigma}(\mathbf{x}) = \gamma_{c_4}\sqrt{\mathbf{w}_\sigma^\top\mathbf{C}_{\mathrm{int}}^{\odot 2}} \;\perp\; \mu$
+};
+
+\end{tikzpicture}
+\end{document}

@@ -1,0 +1,192 @@
+\documentclass[border=8pt,tikz]{standalone}
+\usepackage{fontspec}
+\usepackage{babel}
+\babelprovide[import, main]{vietnamese}
+\babelfont{rm}{Latin Modern Roman}
+\babelfont{sf}{Latin Modern Roman}
+\babelfont{tt}{Latin Modern Roman}
+\usepackage{tikz}
+\usepackage{Box}
+\usepackage{RightBandedBox}
+\usepackage{Ball}
+\usetikzlibrary{arrows.meta,calc,positioning}
+
+\begin{document}
+\begin{tikzpicture}
+
+% Outer Frame
+\filldraw[fill=white, draw=slate!45, line width=0.95pt, rounded corners=6pt] (0.00,0.00) rectangle (26.20,12.30);
+\node[fill=navy, text=white, rounded corners=3pt, inner sep=4.5pt, anchor=north west, font=\small\bfseries]
+    at (0.25,12.08) {\texttt{DirectedBottomUpTreeMPNNLayer} Micro-Architecture at Internal Node $u \in \{148,\dots,294\}\;\big(\mathrm{ch}(u)=\{l(u),\,r(u)\}\big)$};
+
+% ==============================================================================
+% 1. LEFT INPUTS: PLOTNEURALNET 3D TENSOR BLOCKS FOR LEFT & RIGHT CHILDREN
+% ==============================================================================
+\pic[shift={(0,0,0)}] at (1.35,8.75) {
+    RightBandedBox={
+        name=child_l,
+        caption=Left Child $l(u)$,
+        xlabel={{$H_{k,l},v_l,\Delta t_l$}},
+        ylabel=$B$,
+        zlabel=$l(u)$,
+        fill=ConvColor,
+        bandfill=ConvReluColor,
+        height=14,
+        width={1.4,1.4,1.4},
+        depth=12
+    }
+};
+
+\pic[shift={(0,0,0)}] at (1.35,3.15) {
+    RightBandedBox={
+        name=child_r,
+        caption=Right Child $r(u)$,
+        xlabel={{$H_{k,r},v_r,\Delta t_r$}},
+        ylabel=$B$,
+        zlabel=$r(u)$,
+        fill=ConvColor,
+        bandfill=ConvReluColor,
+        height=14,
+        width={1.4,1.4,1.4},
+        depth=12
+    }
+};
+
+% ==============================================================================
+% 2. CENTER CELL BOUNDARY (PURE TIKZ PRECISION MICRO-CIRCUIT FOR NODE u)
+% ==============================================================================
+\filldraw[fill=lightgray!75, draw=deepblue!75, line width=1.15pt, rounded corners=6pt, dashed]
+    (4.65,0.45) rectangle (21.35,11.35);
+\node[fill=deepblue, text=white, rounded corners=3pt, inner sep=3pt, anchor=north west, font=\scriptsize\bfseries]
+    at (4.85,11.18) {Internal Node $u \in V_{\mathrm{int}}$ Precision Message-Passing Cell ($\mathcal{O}(1)$ Operations)};
+
+% ------------------------------------------------------------------------------
+% SUB-CIRCUIT (A): LEARNABLE BRANCH PRECISION GATES (d_L(u), d_R(u), d_sum(u))
+% ------------------------------------------------------------------------------
+\node[fill=softamber, draw=amber!90!black, line width=1.05pt, rounded corners=4pt, inner sep=5pt, text width=4.65cm, anchor=center, font=\footnotesize]
+    at (7.65,8.10) {
+    {\bfseries\color{amber!90!black} Left Gate ($g_{L,u}$):}\\[3pt]
+    $d_L(u) = \big(v_{l(u)} + \Delta t_{l(u)}\big)\,e^{g_{L,u}}$\\[2pt]
+    {\scriptsize $g_{L,u} = 0 \implies d_L^{\mathrm{BM}} = v_l + \Delta t_l$}
+};
+
+\node[fill=softamber, draw=amber!90!black, line width=1.05pt, rounded corners=4pt, inner sep=5pt, text width=4.65cm, anchor=center, font=\footnotesize]
+    at (7.65,3.35) {
+    {\bfseries\color{amber!90!black} Right Gate ($g_{R,u}$):}\\[3pt]
+    $d_R(u) = \big(v_{r(u)} + \Delta t_{r(u)}\big)\,e^{g_{R,u}}$\\[2pt]
+    {\scriptsize $g_{R,u} = 0 \implies d_R^{\mathrm{BM}} = v_r + \Delta t_r$}
+};
+
+\draw[->, draw=amber!90!black, line width=1.45pt] (child_l-east) -- (5.12,8.10);
+\draw[->, draw=amber!90!black, line width=1.45pt] (child_r-east) -- (5.12,3.35);
+
+% Central Adder Node (+) for d_sum(u) = d_L(u) + d_R(u)
+\node[circle, fill=softgreen, draw=darkgreen, line width=1.35pt, minimum width=0.88cm, font=\normalsize\bfseries, text=darkgreen]
+    at (11.45,5.75) {$+$};
+\node[fill=white, draw=darkgreen!75, rounded corners=3pt, inner sep=2.5pt, anchor=south, font=\scriptsize\bfseries, text=darkgreen]
+    at (12.95,6.05) {$d_{\mathrm{sum}}(u) = d_L + d_R$};
+
+\draw[->, draw=amber!90!black, line width=1.4pt] (10.18,8.10) -- (11.45,8.10) -- (11.45,6.22);
+\draw[->, draw=amber!90!black, line width=1.4pt] (10.18,3.35) -- (11.45,3.35) -- (11.45,5.28);
+
+% ------------------------------------------------------------------------------
+% SUB-CIRCUIT (B): STREAM 1 — TRANSLATION-INVARIANT CONTRAST EXTRACTOR (TOP)
+% ------------------------------------------------------------------------------
+\node[circle, fill=softred, draw=crimson, line width=1.35pt, minimum width=0.88cm, font=\normalsize\bfseries, text=crimson]
+    at (13.35,9.65) {$\ominus$};
+\node[text=crimson!90!black, anchor=south, font=\scriptsize\bfseries]
+    at (13.35,10.18) {$\Delta H_{k,u} = H_{k,l(u)} - H_{k,r(u)}$};
+
+% Clean non-overlapping trait buses feeding H_{k,l} and H_{k,r} into Subtractor (-)
+\draw[->, draw=purple!85!black, line width=1.4pt] (child_l-east) -- (3.85,9.65) -- (12.88,9.65);
+\draw[->, draw=purple!85!black, line width=1.4pt] (child_r-east) -- (3.85,4.85) -- (10.65,4.85) -- (10.65,9.35) -- (12.92,9.35);
+
+\node[fill=softpurple, draw=purple!85!black, line width=1.1pt, rounded corners=4pt, inner sep=5pt, text width=5.45cm, anchor=center, font=\footnotesize]
+    at (17.95,9.55) {
+    {\bfseries\color{purple!90!black} Stream 1 — Contrast ($C_{k,u}$):}\\[3pt]
+    $C_{k,u} = \dfrac{H_{k,l(u)} - H_{k,r(u)}}{\sqrt{d_L(u) + d_R(u)}} \sim \mathcal{N}(0,\sigma_k^2)$\\[3pt]
+    {\scriptsize\color{darkteal} $\mathbf{x}_k + c\mathbf{1} \;\mapsto\; C_{k,u}\;\;(\perp \mu_k)$}
+};
+
+\draw[->, draw=crimson, line width=1.4pt] (13.82,9.65) -- (15.02,9.65);
+\draw[->, draw=darkgreen, line width=1.25pt, dashed] (14.35,5.75) -- (14.35,9.15) -- (15.02,9.15);
+
+% ------------------------------------------------------------------------------
+% SUB-CIRCUIT (C): STREAM 2 — CONVEX STATE AGGREGATION (MIDDLE)
+% ------------------------------------------------------------------------------
+\node[fill=softblue, draw=deepblue, line width=1.1pt, rounded corners=4pt, inner sep=5pt, text width=5.45cm, anchor=center, font=\footnotesize]
+    at (17.95,5.55) {
+    {\bfseries\color{deepblue} Stream 2 — Convex State ($H_{k,u}$):}\\[2.5pt]
+    $w_L = \dfrac{d_R(u)}{d_{\mathrm{sum}}(u)},\quad w_R = \dfrac{d_L(u)}{d_{\mathrm{sum}}(u)}$\\[3pt]
+    $H_{k,u} = w_L H_{k,l(u)} + w_R H_{k,r(u)}$\\[2.5pt]
+    {\scriptsize\color{crimson!90!black} $w_L + w_R \equiv 1 \implies \mathbf{x}_k + c\mathbf{1} \mapsto H_{k,u} + c$}
+};
+
+\draw[->, draw=darkgreen, line width=1.35pt] (11.90,5.75) -- (15.02,5.75);
+
+% ------------------------------------------------------------------------------
+% SUB-CIRCUIT (D): SUBTREE HARMONIC VARIANCE UPDATE (BOTTOM)
+% ------------------------------------------------------------------------------
+\node[fill=softteal, draw=darkteal, line width=1.1pt, rounded corners=4pt, inner sep=5pt, text width=5.45cm, anchor=center, font=\footnotesize]
+    at (17.95,1.85) {
+    {\bfseries\color{darkteal} Subtree Variance ($v_u$):}\\[3pt]
+    $v_u = \dfrac{d_L(u)\,d_R(u)}{d_L(u) + d_R(u)} = \big(d_L^{-1} + d_R^{-1}\big)^{-1}$\\[3pt]
+    {\scriptsize $u = \rho = 294 \implies v_{294} = v_\rho = 0.2022$}
+};
+
+\draw[->, draw=darkteal, line width=1.35pt] (11.45,3.35) -- (11.45,1.85) -- (15.02,1.85);
+\draw[->, draw=darkgreen, line width=1.25pt, dashed] (14.35,5.75) -- (14.35,2.25) -- (15.02,2.25);
+
+% ==============================================================================
+% 3. RIGHT OUTPUTS: PLOTNEURALNET 3D TENSOR SLICES (STREAM 1, STREAM 2, PARENT)
+% ==============================================================================
+\pic[shift={(0,0,0)}] at (23.35,9.55) {
+    RightBandedBox={
+        name=out_c,
+        caption=$C_{k,u} \in \mathbf{C}_{\mathrm{int}}$,
+        xlabel={{1}},
+        ylabel=$B$,
+        zlabel=Stream 1,
+        fill=PinkTensor,
+        bandfill=SoftmaxColor,
+        height=11,
+        width={1.8},
+        depth=10
+    }
+};
+
+\pic[shift={(0,0,0)}] at (23.35,5.55) {
+    RightBandedBox={
+        name=out_h,
+        caption=$H_{k,u} \in \mathbf{H}_{\mathrm{nodes}}$,
+        xlabel={{1}},
+        ylabel=$B$,
+        zlabel=Stream 2,
+        fill=ConvColor,
+        bandfill=ConvReluColor,
+        height=11,
+        width={1.8},
+        depth=10
+    }
+};
+
+\pic[shift={(0,0,0)}] at (23.35,1.85) {
+    Box={
+        name=out_v,
+        caption=$v_u \to p(u)$,
+        xlabel={{1}},
+        ylabel=1,
+        zlabel=Parent,
+        fill=TealTensor,
+        height=9,
+        width={1.8},
+        depth=9
+    }
+};
+
+\draw[->, draw=purple!90!black, line width=1.5pt] (20.88,9.55) -- (out_c-west);
+\draw[->, draw=deepblue, line width=1.5pt] (20.88,5.55) -- (out_h-west);
+\draw[->, draw=darkteal, line width=1.5pt] (20.88,1.85) -- (out_v-west);
+
+\end{tikzpicture}
+\end{document}

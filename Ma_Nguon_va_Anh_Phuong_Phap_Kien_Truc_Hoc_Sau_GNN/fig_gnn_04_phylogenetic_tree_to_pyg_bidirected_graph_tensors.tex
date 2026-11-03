@@ -1,0 +1,211 @@
+\documentclass[border=8pt,tikz]{standalone}
+\usepackage{fontspec}
+\usepackage{babel}
+\babelprovide[import, main]{vietnamese}
+\babelfont{rm}{Latin Modern Roman}
+\babelfont{sf}{Latin Modern Roman}
+\babelfont{tt}{Latin Modern Roman}
+\usepackage{tikz}
+\usepackage{Box}
+\usepackage{RightBandedBox}
+\usepackage{Ball}
+\usetikzlibrary{arrows.meta,calc,positioning}
+
+\begin{document}
+\begin{tikzpicture}
+
+% ==============================================================================
+% PANEL (A): BIDIRECTED PHYLOGENETIC GRAPH G_T = (V, E_dir) (PURE TIKZ)
+% ==============================================================================
+\filldraw[fill=white, draw=slate!45, line width=0.95pt, rounded corners=5pt] (0.00,0.00) rectangle (8.75,11.10);
+\node[fill=navy, text=white, rounded corners=3pt, inner sep=4pt, anchor=north west, font=\small\bfseries]
+    at (0.20,10.90) {(A) $\mathcal{T}_{\mathrm{Newick}} \;\mapsto\; \mathcal{G}_{\mathcal{T}} = (V, E_{\mathrm{dir}}),\quad |V|=295,\; |E_{\mathrm{dir}}|=588$};
+
+% Time & Postorder Axis in Panel (A)
+\draw[->, draw=slate!75, line width=0.95pt] (0.65,2.15) -- (8.15,2.15);
+\draw[draw=slate!75, line width=0.85pt] (1.35,2.05) -- (1.35,2.25);
+\draw[draw=slate!75, line width=0.85pt] (4.45,2.05) -- (4.45,2.25);
+\draw[draw=slate!75, line width=0.85pt] (7.55,2.05) -- (7.55,2.25);
+\node[text=slate, anchor=north, font=\scriptsize\bfseries] at (1.35,2.00) {$T_v = 1.0$};
+\node[text=slate, anchor=north, font=\scriptsize\bfseries] at (4.45,2.00) {$T_u \in (0,1)$};
+\node[text=slate, anchor=north, font=\scriptsize\bfseries] at (7.55,2.00) {$T_\rho = 0.0$};
+
+% Antiparallel Directed Edges (Upward solid teal dir=+1, Downward dashed purple dir=-1)
+% 1. Leaf v_0 (1.35, 9.20) <-> Internal u_148 (4.45, 7.60)
+\draw[->, draw=teal!90!black, line width=1.65pt] (1.72,9.12) -- (4.12,7.88);
+\draw[->, draw=purple!85!black, line width=1.25pt, dashed] (4.02,7.55) -- (1.62,8.79);
+\node[text=darkteal, anchor=south west, font=\scriptsize\bfseries] at (2.75,8.55) {$e_{2m}\;(+1)$};
+\node[text=purple, anchor=north east, font=\scriptsize\bfseries] at (2.85,8.05) {$e_{2m+1}\;(-1)$};
+
+% 2. Leaf v_1 (1.35, 6.10) <-> Internal u_148 (4.45, 7.60)
+\draw[->, draw=teal!90!black, line width=1.65pt] (1.72,6.18) -- (4.12,7.32);
+\draw[->, draw=purple!85!black, line width=1.25pt, dashed] (4.02,7.66) -- (1.62,6.52);
+\node[text=darkteal, anchor=north west, font=\scriptsize\bfseries] at (2.75,6.65) {$\Delta t_1\;(+1)$};
+
+% 3. Internal u_148 (4.45, 7.60) <-> Root rho_294 (7.55, 5.65)
+\draw[->, draw=teal!90!black, line width=1.75pt] (4.82,7.48) -- (7.22,5.95);
+\draw[->, draw=purple!85!black, line width=1.25pt, dashed] (7.10,5.62) -- (4.70,7.15);
+\node[text=darkteal, anchor=south west, font=\scriptsize\bfseries] at (5.85,6.75) {$\Delta t_u\;(+1)$};
+\node[text=purple, anchor=north east, font=\scriptsize\bfseries] at (5.90,6.22) {$(-1)$};
+
+% 4. Outgroup Leaf v_147 (1.35, 3.45) <-> Root rho_294 (7.55, 5.65)
+\draw[->, draw=teal!90!black, line width=1.65pt] (1.74,3.62) -- (7.18,5.58);
+\draw[->, draw=purple!85!black, line width=1.25pt, dashed] (7.10,5.28) -- (1.66,3.32);
+\node[text=darkteal, anchor=south east, font=\scriptsize\bfseries] at (4.25,4.75) {$\Delta t_{147}=1.0\;(+1)$};
+\node[text=purple, anchor=north, font=\scriptsize\bfseries] at (4.55,4.18) {$e_{\downarrow}\;(-1)$};
+
+% Graph Nodes (Leaves, Internal, Root)
+\node[circle, fill=softgreen, draw=darkgreen, line width=1.35pt, minimum width=0.82cm, font=\footnotesize\bfseries, text=darkgreen]
+    at (1.35,9.10) {$v_0$};
+\node[fill=white, draw=darkgreen!55, rounded corners=2pt, inner sep=2pt, anchor=north, font=\tiny\bfseries, text=darkgreen]
+    at (1.35,8.58) {$v \in [0,147]:\; x_{k,0}$};
+
+\node[circle, fill=softgreen, draw=darkgreen, line width=1.35pt, minimum width=0.82cm, font=\footnotesize\bfseries, text=darkgreen]
+    at (1.35,6.15) {$v_1$};
+\node[fill=white, draw=darkgreen!55, rounded corners=2pt, inner sep=2pt, anchor=north, font=\tiny\bfseries, text=darkgreen]
+    at (1.35,5.62) {$m_v^{\mathrm{leaf}}=1,\; r_v=0$};
+
+\node[text=slate, font=\normalsize\bfseries] at (1.35,4.75) {$\vdots$};
+
+\node[circle, fill=softgreen, draw=darkgreen, line width=1.35pt, minimum width=0.82cm, font=\scriptsize\bfseries, text=darkgreen]
+    at (1.35,3.45) {$v_{147}$};
+\node[fill=white, draw=darkgreen!55, rounded corners=2pt, inner sep=2pt, anchor=north, font=\tiny\bfseries, text=darkgreen]
+    at (1.35,2.92) {\textit{Philanthus} ($x_{k,147}$)};
+
+\node[circle, fill=softblue, draw=deepblue, line width=1.35pt, minimum width=0.85cm, font=\footnotesize\bfseries, text=deepblue]
+    at (4.45,7.55) {$u$};
+\node[fill=white, draw=deepblue!55, rounded corners=2pt, inner sep=2pt, anchor=south, font=\tiny\bfseries, text=deepblue]
+    at (4.45,8.08) {$u \in [148,293]:\;\mathrm{Mask}\;0$};
+
+\node[circle, fill=softred, draw=crimson, line width=1.45pt, minimum width=0.88cm, font=\footnotesize\bfseries, text=crimson]
+    at (7.55,5.65) {$\rho_{294}$};
+\node[fill=white, draw=crimson!55, rounded corners=2pt, inner sep=2pt, anchor=north, font=\tiny\bfseries, text=crimson]
+    at (7.55,5.08) {$r_{294}^{\mathrm{root}}=1,\; m_{294}=0$};
+
+% Legend Box at bottom of Panel (A)
+\node[fill=lightgray, draw=slate!55, line width=0.8pt, rounded corners=3pt, inner sep=3.5pt, text width=7.95cm, anchor=south west, font=\scriptsize]
+    at (0.25,0.22) {
+    $V_{\mathrm{leaf}} = \{0,\dots,147\},\;\; V_{\mathrm{int}} = \{148,\dots,294\}\;\;(\text{Postorder})$\\[1.5pt]
+    ${\color{darkteal}e_{\uparrow} = (v \to u)\;(\mathrm{dir}_e = +1)} \;\oplus\; {\color{purple}e_{\downarrow} = (u \to v)\;(\mathrm{dir}_e = -1)}$
+};
+
+% ==============================================================================
+% PANEL (B): EXPLICIT PYG 2D TENSOR SCHEMAS (TIKZ MATRIX TABLES)
+% ==============================================================================
+\filldraw[fill=white, draw=slate!45, line width=0.95pt, rounded corners=5pt] (9.05,0.00) rectangle (20.15,11.10);
+\node[fill=navy, text=white, rounded corners=3pt, inner sep=4pt, anchor=north west, font=\small\bfseries]
+    at (9.25,10.90) {(B) Explicit PyG Tensors: $\mathbf{X}_k,\; \texttt{edge\_index},\; \texttt{edge\_attr}$};
+
+% 1. Top Table: Node Feature Matrix X_k in R^{295 x 6}
+\node[text=navy, anchor=west, font=\footnotesize\bfseries] at (9.35,10.05)
+    {1. Node Tensor $\mathbf{X}_k \in \mathbb{R}^{295 \times 6}\;\;(\delta_{k,v} = x_{k,v}^{\mathrm{obs}} - \bar{x}_k,\; \tilde{d}_v = d_{\mathrm{topo}}(v)/16)$:};
+
+\node[fill=softblue!45, draw=deepblue!80, line width=0.95pt, rounded corners=4pt, inner sep=4.5pt, anchor=north west, font=\scriptsize]
+    at (9.35,9.78) {
+    $\begin{array}{c|cccccc}
+    v \in V & x_{k,v}^{\mathrm{obs}} & \delta_{k,v} & m_v^{\mathrm{leaf}} & r_v^{\mathrm{root}} & T_v & \tilde{d}_v \\
+    \hline
+    {\color{darkgreen}0 \dots 147\;(\mathrm{Leaf})} & {\color{darkgreen}x_{k,v}} & {\color{darkgreen}x_{k,v}-\bar{x}_k} & {\color{darkgreen}1} & 0 & 1.000 & d_v/16 \\
+    {\color{deepblue}148 \dots 293\;(\mathrm{Int})} & {\color{crimson}0.0\;(\mathrm{Mask})} & {\color{crimson}0.0\;(\mathrm{Mask})} & {\color{crimson}0} & 0 & T_u & d_u/16 \\
+    {\color{crimson}294\;(\mathrm{Root}\;\rho)} & {\color{crimson}0.0\;(\mathrm{Mask})} & {\color{crimson}0.0\;(\mathrm{Mask})} & {\color{crimson}0} & {\color{crimson}1} & 0.000 & 0.000
+    \end{array}$
+};
+
+% 2. Middle Table: Directed Connectivity Tensor edge_index in Z^{2 x 588}
+\node[text=purple!90!black, anchor=west, font=\footnotesize\bfseries] at (9.35,6.88)
+    {2. COO Connectivity $\texttt{edge\_index} \in \mathbb{Z}^{2 \times 588}\;\;(|E_{\mathrm{dir}}| = 2 \times 294 = 588)$:};
+
+\node[fill=softpurple!65, draw=purple!80, line width=0.95pt, rounded corners=4pt, inner sep=4.5pt, anchor=north west, font=\scriptsize]
+    at (9.35,6.60) {
+    $\begin{array}{c|cccccc}
+    \mathrm{Row} & e_0\;(\uparrow) & e_1\;(\downarrow) & \cdots & e_{2m}\;(\uparrow) & e_{2m+1}\;(\downarrow) & e_{587}\;(\downarrow) \\
+    \hline
+    \texttt{src}\;(0) & {\color{darkteal}v_0\;(0)} & {\color{purple}u_{148}} & \cdots & {\color{darkteal}\mathrm{child}\;v} & {\color{purple}\mathrm{parent}\;u} & {\color{purple}\rho\;(294)} \\
+    \texttt{dst}\;(1) & {\color{darkteal}u_{148}} & {\color{purple}v_0\;(0)} & \cdots & {\color{darkteal}\mathrm{parent}\;u} & {\color{purple}\mathrm{child}\;v} & {\color{purple}v_{147}\;(147)}
+    \end{array}$
+};
+
+% 3. Bottom Table: Physics-Informed Branch Attribute Tensor edge_attr in R^{588 x 4}
+\node[text=darkteal, anchor=west, font=\footnotesize\bfseries] at (9.35,4.15)
+    {3. Branch Tensor $\texttt{edge\_attr} \in \mathbb{R}^{588 \times 4}\;\;(\mathbf{e}_{uv} \in \mathbb{R}^4)$:};
+
+\node[fill=softteal!65, draw=darkteal!85, line width=0.95pt, rounded corners=4pt, inner sep=4.5pt, anchor=north west, font=\scriptsize]
+    at (9.35,3.88) {
+    $\begin{array}{c|cccc}
+    e \in E_{\mathrm{dir}} & \Delta t_e & (\Delta t_e + 10^{-3})^{-1} & \ln(\Delta t_e) & \mathrm{dir}_e \\
+    \hline
+    {\color{darkteal}e_{2m}\;(v \to u)} & \Delta t_v & (\Delta t_v + 10^{-3})^{-1} & \ln\Delta t_v & {\color{darkteal}+1.0\;(\uparrow)} \\
+    {\color{purple}e_{2m+1}\;(u \to v)} & \Delta t_v & (\Delta t_v + 10^{-3})^{-1} & \ln\Delta t_v & {\color{purple}-1.0\;(\downarrow)}
+    \end{array}$
+};
+
+\node[fill=softamber!60, draw=amber!85!black, line width=0.85pt, rounded corners=3pt, inner sep=3.5pt, text width=10.35cm, anchor=south west, font=\scriptsize]
+    at (9.35,0.22) {
+    $c_{\mathrm{cond}}:\quad \text{Stage I-A } (\sigma_k),\quad \text{Stage I-B } (\mu_k),\quad \text{Stage II Joint } (c_{\mathrm{cond}} \equiv 0.0,\; 147\text{ DOF})$
+};
+
+% ==============================================================================
+% PANEL (C): 3D PLOTNEURALNET BATCHED PYG DATA OBJECT (B x 295 x 6)
+% ==============================================================================
+\filldraw[fill=white, draw=slate!45, line width=0.95pt, rounded corners=5pt] (20.45,0.00) rectangle (27.30,11.10);
+\node[fill=navy, text=white, rounded corners=3pt, inner sep=4pt, anchor=north west, font=\small\bfseries]
+    at (20.65,10.90) {(C) 3D Batched PyG Tensors ($\mathcal{B}$)};
+
+\pic[shift={(0,0,0)}] at (21.65,8.35) {
+    RightBandedBox={
+        name=x_batch,
+        caption=$\mathcal{X}_{\mathcal{B}} \in \mathbb{R}^{B \times 295 \times 6}$,
+        xlabel={{6}},
+        ylabel=295,
+        zlabel=$B$,
+        fill=ConvColor,
+        bandfill=ConvReluColor,
+        height=15,
+        width={1.6,1.6,1.6},
+        depth=14
+    }
+};
+
+\pic[shift={(0,0,0)}] at (21.85,4.95) {
+    RightBandedBox={
+        name=e_batch,
+        caption=$\mathcal{E}_{\mathcal{B}} \in \mathbb{R}^{B \times 588 \times 4}$,
+        xlabel={{4}},
+        ylabel=588,
+        zlabel=$B$,
+        fill=TealTensor,
+        bandfill=UnpoolColor,
+        height=14,
+        width={1.8,1.8},
+        depth=14
+    }
+};
+
+\pic[shift={(0,0,0)}] at (25.55,6.65) {
+    Ball={
+        name=batch_merge,
+        fill=SumColor,
+        radius=2.2,
+        logo=$\oplus$
+    }
+};
+
+\draw[->, draw=slate, line width=1.35pt] (x_batch-east) -- (25.55,8.35) -- (batch_merge-north);
+\draw[->, draw=slate, line width=1.35pt] (e_batch-east) -- (25.55,4.95) -- (batch_merge-south);
+\draw[->, draw=purple!90!black, line width=1.35pt] (batch_merge-south) -- (25.55,2.45);
+
+% Arrows from Panel B to Panel C
+\draw[->, draw=deepblue, line width=1.25pt] (20.00,8.35) -- (x_batch-west);
+\draw[->, draw=darkteal, line width=1.25pt] (20.00,3.15) -- (20.95,3.15) -- (20.95,4.95) -- (e_batch-west);
+
+% Bottom summary formula in Panel (C)
+\node[fill=softpurple!70, draw=purple!85!black, line width=0.95pt, rounded corners=4pt, inner sep=4.5pt, text width=6.15cm, anchor=south west, font=\scriptsize]
+    at (20.72,0.22) {
+    {\bfseries\color{purple!90!black} PyG Mini-Batch $\mathcal{B}$ ($B$ Trees):}\\[2pt]
+    $\texttt{Data}\big(\mathbf{X}_{\mathcal{B}},\, \texttt{edge\_index},\, \texttt{edge\_attr}\big)$\\[2pt]
+    $\mathbf{X}_{\mathcal{B}} \in \mathbb{R}^{(295B) \times 6},\quad \mathbf{E}_{\mathcal{B}} \in \mathbb{R}^{(588B) \times 4}$\\[1.5pt]
+    $\mathcal{M}_1 \to \mathcal{M}_{5B}:\;\; \mathcal{G}_{\mathcal{T}} \mapsto (\hat{\mu}_k, \hat{\sigma}_k)_{k=1}^B$
+};
+
+\end{tikzpicture}
+\end{document}

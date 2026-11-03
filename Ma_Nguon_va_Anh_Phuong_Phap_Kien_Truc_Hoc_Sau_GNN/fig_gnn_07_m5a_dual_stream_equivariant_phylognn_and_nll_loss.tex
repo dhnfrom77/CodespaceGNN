@@ -1,0 +1,288 @@
+\documentclass[border=8pt,tikz]{standalone}
+\usepackage{fontspec}
+\usepackage{babel}
+\babelprovide[import, main]{vietnamese}
+\babelfont{rm}{Latin Modern Roman}
+\babelfont{sf}{Latin Modern Roman}
+\babelfont{tt}{Latin Modern Roman}
+\usepackage{tikz}
+\usepackage{Box}
+\usepackage{RightBandedBox}
+\usepackage{Ball}
+\usetikzlibrary{arrows.meta,calc,positioning}
+
+\begin{document}
+\begin{tikzpicture}
+
+% ==============================================================================
+% PANEL (A): DUAL-STREAM 3D TENSOR ARCHITECTURE (PLOTNEURALNET + TIKZ ROUTING)
+% ==============================================================================
+\filldraw[fill=white, draw=slate!45, line width=0.95pt, rounded corners=5pt] (0.00,0.00) rectangle (17.35,11.80);
+\node[fill=navy, text=white, rounded corners=3pt, inner sep=4pt, anchor=north west, font=\small\bfseries]
+    at (0.20,11.60) {(A) \texttt{PhyloGNN\_M5A\_UnbiasedNLL}: Dual-Stream 3D Tensor Architecture ($C_{k,u}^2 \perp H_{k,u}$)};
+
+% 1. Left Inputs: 3D Batched Node Tensor X_leaf (B x 148 x 6) & Edge Tensor E_dir (B x 588 x 4)
+\pic[shift={(0,0,0)}] at (0.68,8.35) {
+    RightBandedBox={
+        name=x_leaf,
+        caption=$\mathbf{X}_{\mathrm{leaf}}$,
+        xlabel={{6}},
+        ylabel=$B$,
+        zlabel=148,
+        fill=ConvColor,
+        bandfill=ConvReluColor,
+        height=14,
+        width={{2.1}},
+        depth=12
+    }
+};
+
+\pic[shift={(0,0,0)}] at (0.68,3.25) {
+    RightBandedBox={
+        name=e_dir,
+        caption=$\mathbf{E}_{\mathrm{dir}}(\Delta t_e)$,
+        xlabel={{4}},
+        ylabel=$B$,
+        zlabel=588,
+        fill=TealTensor,
+        bandfill=UnpoolColor,
+        height=14,
+        width={{2.1}},
+        depth=12
+    }
+};
+
+% 2. Directed Bottom-Up Tree-MPNN Trunk (148 -> 294)
+\pic[shift={(0,0,0)}] at (2.88,5.80) {
+    RightBandedBox={
+        name=mpnn_trunk,
+        caption={\textbf{MPNN} ($148\to 294$)},
+        xlabel={{$g_u,w_u,v_u$}},
+        ylabel=$B$,
+        zlabel=295,
+        fill=ConvColor,
+        bandfill=ConvReluColor,
+        height=20,
+        width={{1.3,1.3,1.3}},
+        depth=15
+    }
+};
+
+\draw[->, draw=slate, line width=1.45pt] (x_leaf-east) -- (1.78,8.35) -- (1.78,6.15) -- (mpnn_trunk-west);
+\draw[->, draw=slate, line width=1.45pt] (e_dir-east) -- (1.78,3.25) -- (1.78,5.45) -- (mpnn_trunk-west);
+
+% ==============================================================================
+% STREAM 1 (TOP): QUADRATIC CONTRAST SCALE HEAD (INVARIANT TO +c1, -> \hat{\sigma}_k)
+% ==============================================================================
+\filldraw[fill=softteal!45, draw=darkteal!75, line width=0.95pt, dashed, rounded corners=4pt]
+    (5.55,6.25) rectangle (16.95,10.95);
+\node[fill=darkteal, text=white, rounded corners=2.5pt, inner sep=2.5pt, anchor=north west, font=\scriptsize\bfseries]
+    at (5.72,10.80) {Stream 1 --- \texttt{QuadraticContrastScaleHead} ($\mathbf{x}_k + c\mathbf{1} \mapsto \hat{\sigma}_k$, Invariant $\perp \mu_k$)};
+
+% C_int (B x 147 x 1)
+\pic[shift={(0,0,0)}] at (6.05,8.35) {
+    RightBandedBox={
+        name=c_int,
+        caption=$\mathbf{C}_{\mathrm{int}}$,
+        xlabel={{1}},
+        ylabel=$B$,
+        zlabel=147,
+        fill=TealTensor,
+        bandfill=UnpoolColor,
+        height=13,
+        width={{1.5}},
+        depth=11
+    }
+};
+
+% Elementwise Square Ball (\odot^2)
+\pic[shift={(0,0,0)}] at (8.35,8.35) {
+    Ball={name=sq_op, fill=SumColor, radius=2.2, logo=$\odot^2$}
+};
+\node[text=darkteal, font=\scriptsize\bfseries, anchor=north] at (8.35,7.60) {$C_{k,u}^2$};
+
+% Simplex Convex Weighting Tensor C_int^{\odot 2} * w_\sigma (w_\sigma \in \Delta^{146})
+\pic[shift={(0,0,0)}] at (9.95,8.35) {
+    RightBandedBox={
+        name=c_sq_w,
+        caption=$\mathbf{C}_{\mathrm{int}}^{\odot 2}\mathbf{w}_\sigma$,
+        xlabel={{$\mathbf{w}_\sigma \in \Delta^{146}$}},
+        ylabel=$B$,
+        zlabel=147,
+        fill=ConvColor,
+        bandfill=ConvReluColor,
+        height=13,
+        width={{1.25,1.25}},
+        depth=11
+    }
+};
+
+% Sqrt + Bessel Correction Ball (\gamma_{c_4} \sqrt{\cdot})
+\pic[shift={(0,0,0)}] at (12.95,8.35) {
+    Ball={name=sqrt_op, fill=SumColor, radius=2.2, logo=$\sqrt{\cdot}$}
+};
+\node[text=darkgreen, font=\scriptsize\bfseries, anchor=north] at (12.95,7.60) {$\gamma_{c_4}\sqrt{\cdot}$};
+
+% Output 3D Tensor \hat{\sigma}_{k, M5A} (B x 1)
+\pic[shift={(0,0,0)}] at (14.65,8.35) {
+    RightBandedBox={
+        name=sigma_out,
+        caption=$\hat{\sigma}_{k,\mathcal{M}_{5A}}$,
+        xlabel={{1}},
+        ylabel=$B$,
+        fill=PurpleTensor,
+        bandfill=FcColor,
+        height=11,
+        width={{1.6}},
+        depth=9
+    }
+};
+
+\draw[->, draw=darkteal, line width=1.45pt] (mpnn_trunk-east) -- (5.05,5.80) -- (5.05,8.35) -- (c_int-west);
+\draw[->, draw=darkteal, line width=1.45pt] (c_int-east) -- (sq_op-west);
+\draw[->, draw=darkteal, line width=1.45pt] (sq_op-east) -- (c_sq_w-west);
+\draw[->, draw=darkteal, line width=1.45pt] (c_sq_w-east) -- (sqrt_op-west);
+\draw[->, draw=darkteal, line width=1.45pt] (sqrt_op-east) -- (sigma_out-west);
+
+% ==============================================================================
+% STREAM 2 (BOTTOM): EQUIVARIANT ROOT LOCATION HEAD (x_k + c1 -> \hat{\mu}_k + c)
+% ==============================================================================
+\filldraw[fill=softpurple!45, draw=purple!75, line width=0.95pt, dashed, rounded corners=4pt]
+    (5.55,0.45) rectangle (16.95,5.75);
+\node[fill=purple!90!black, text=white, rounded corners=2.5pt, inner sep=2.5pt, anchor=north west, font=\scriptsize\bfseries]
+    at (5.72,5.60) {Stream 2 --- \texttt{EquivariantRootLocationHead} ($\mathbf{x}_k + c\mathbf{1} \mapsto \hat{\mu}_k + c$, Equivariant)};
+
+% Internal States Tensor H_{148:294} (B x 147)
+\pic[shift={(0,0,0)}] at (6.05,2.55) {
+    RightBandedBox={
+        name=h_int,
+        caption=$\mathbf{H}_{148:294}$,
+        xlabel={{146,1}},
+        ylabel=$B$,
+        zlabel=147,
+        fill=PurpleTensor,
+        bandfill=FcColor,
+        height=13,
+        width={{1.2,1.0}},
+        depth=11
+    }
+};
+
+% Zero-Sum Relative Deviations Tensor (H_int - H_294) * w_\mu
+\pic[shift={(0,0,0)}] at (9.65,2.55) {
+    RightBandedBox={
+        name=h_diff,
+        caption=$(\mathbf{H}_{\mathrm{int}}-H_{294})\mathbf{w}_\mu$,
+        xlabel={{$\mathbf{w}_\mu$}},
+        ylabel=$B$,
+        zlabel=146,
+        fill=FcColor,
+        bandfill=FcReluColor,
+        height=12,
+        width={{1.25,1.25}},
+        depth=10
+    }
+};
+
+% Equivariant Root Skip-Connection Ball (+)
+\pic[shift={(0,0,0)}] at (12.75,2.55) {
+    Ball={name=add_root, fill=SumColor, radius=2.2, logo=$+$}
+};
+\node[text=purple!90!black, font=\scriptsize\bfseries, anchor=north] at (12.75,1.80) {$H_{k,294} + \Delta_\mu$};
+
+% Output 3D Tensor \hat{\mu}_{k, M5A} (B x 1)
+\pic[shift={(0,0,0)}] at (14.65,2.55) {
+    RightBandedBox={
+        name=mu_out,
+        caption=$\hat{\mu}_{k,\mathcal{M}_{5A}}$,
+        xlabel={{1}},
+        ylabel=$B$,
+        fill=RedTensor,
+        bandfill=PoolColor,
+        height=11,
+        width={{1.6}},
+        depth=9
+    }
+};
+
+\draw[->, draw=purple!90!black, line width=1.45pt] (mpnn_trunk-east) -- (5.05,5.80) -- (5.05,2.55) -- (h_int-west);
+\draw[->, draw=purple!90!black, line width=1.45pt] (h_int-east) -- (h_diff-west);
+\draw[->, draw=purple!90!black, line width=1.45pt] (h_diff-east) -- (add_root-west);
+% Skip connection for Root State H_{k,294}
+\draw[->, draw=deepblue, line width=1.35pt] (6.72,3.82) -- (6.72,4.75) -- (12.75,4.75) -- (add_root-north);
+\node[text=deepblue, font=\tiny\bfseries, anchor=south] at (9.75,4.76) {$H_{k,294}\text{ (Root Skip)}$};
+\draw[->, draw=crimson, line width=1.45pt] (add_root-east) -- (mu_out-west);
+
+% ==============================================================================
+% PANEL (B): HETEROSCEDASTIC NLL PRECISION FEEDBACK & GRADIENT EQUALIZATION (TIKZ)
+% ==============================================================================
+\filldraw[fill=white, draw=slate!45, line width=0.95pt, rounded corners=5pt] (17.75,0.00) rectangle (27.40,11.80);
+\node[fill=navy, text=white, rounded corners=3pt, inner sep=4pt, anchor=north west, font=\small\bfseries]
+    at (17.95,11.60) {(B) $\hat{\sigma}_k^{-2}$ Precision Feedback \& Gradient Equalization};
+
+% 1. Top Box: HeteroscedasticPhyloNLLLoss Equation & Precision Weighting
+\node[fill=softred!65, draw=crimson!85, line width=1.0pt, rounded corners=4pt, inner sep=4.5pt, text width=8.85cm, anchor=north west, font=\scriptsize]
+    at (18.02,10.75) {
+    {\bfseries\color{crimson!90!black} 1. \texttt{HeteroscedasticPhyloNLLLoss} ($\hat{\sigma}_k^{-2}$ Self-Norm):}\\[3pt]
+    $\mathcal{L}_{\mathrm{NLL}} = \dfrac{1}{2}\!\left[\dfrac{(\hat{\mu}_k - \mu_k)^2}{\hat{\sigma}_k^2} + \ln\hat{\sigma}_k^2\right] + \lambda_\sigma(\hat{\sigma}_k - \sigma_k)^2 + \lambda_{\mathrm{rel}}\!\left(\dfrac{\hat{\sigma}_k - \sigma_k}{\sigma_k}\right)^{\!2}$\\[4pt]
+    $\dfrac{\partial\mathcal{L}_{\mathrm{NLL}}}{\partial\hat{\mu}_k} = \dfrac{\hat{\mu}_k - \mu_k}{\hat{\sigma}_k^2} \;\;\Longrightarrow\;\; \mathbb{E}\!\left[\left(\sigma_k\dfrac{\partial\mathcal{L}_{\mathrm{NLL}}}{\partial\hat{\mu}_k}\right)^{\!2}\right] \equiv v_\rho = 0.2022$
+};
+
+% Orthogonal Feedback Arrows from Stream 1 (\hat{\sigma}_k) and Stream 2 (\hat{\mu}_k) into NLL Box
+\draw[->, draw=darkteal, line width=1.45pt] (sigma_out-east) -- (17.52,8.35) -- (17.52,9.35) -- (18.02,9.35);
+\draw[->, draw=crimson, line width=1.45pt] (mu_out-east) -- (17.58,2.55) -- (17.58,8.15) -- (18.02,8.15);
+
+% 2. Middle Plot: Gradient Variance Ratio Across \sigma_k \in [0.1, 5.0] (M4 Raw MSE vs M5A NLL)
+\node[text=navy, anchor=north west, font=\scriptsize\bfseries]
+    at (18.02,6.95) {2. Gradient Variance Across $\sigma_k \in [0.1, 5.0]$ ($\mathcal{M}_4$ vs. $\mathcal{M}_{5A}$):};
+
+% Plot frame & grid
+\filldraw[fill=slate!4, draw=slate!35, line width=0.7pt, rounded corners=2pt] (19.25,2.35) rectangle (26.95,6.25);
+\draw[draw=slate!25, dashed, line width=0.5pt] (19.25,2.90) -- (26.95,2.90);
+\draw[draw=slate!25, dashed, line width=0.5pt] (19.25,4.45) -- (26.95,4.45);
+\draw[draw=slate!25, dashed, line width=0.5pt] (19.25,5.95) -- (26.95,5.95);
+
+% Axes
+\draw[->, draw=slate, line width=1.0pt] (19.25,2.35) -- (27.15,2.35);
+\draw[->, draw=slate, line width=1.0pt] (19.25,2.35) -- (19.25,6.45);
+
+% Y-axis log labels
+\node[text=darkteal, anchor=east, font=\tiny\bfseries] at (19.18,2.90) {$1\times$};
+\node[text=slate, anchor=east, font=\tiny] at (19.18,4.45) {$100\times$};
+\node[text=crimson, anchor=east, font=\tiny\bfseries] at (19.18,5.95) {$2{,}500\times$};
+
+% X-axis ticks (sigma_k = 0.1, 1.0, 2.5, 5.0)
+\node[text=slate, anchor=north, font=\tiny] at (19.45,2.28) {$0.1$};
+\node[text=slate, anchor=north, font=\tiny] at (21.25,2.28) {$1.0$};
+\node[text=slate, anchor=north, font=\tiny] at (23.55,2.28) {$2.5$};
+\node[text=slate, anchor=north, font=\tiny] at (26.65,2.28) {$5.0$};
+\node[text=slate, anchor=north, font=\scriptsize\bfseries] at (23.10,1.92) {Evolutionary Rate $\sigma_k \in [0.1, 5.0]$};
+
+% Curve 1: M4 Raw MSE Gradient Variance ~ sigma_k^2 / 0.1^2 (2,500x explosion!)
+\draw[draw=crimson, line width=2.0pt, dashed]
+    (19.45,2.90) .. controls (21.50,3.45) and (23.80,4.65) .. (26.65,5.95);
+\filldraw[fill=crimson, draw=white, line width=0.6pt] (26.65,5.95) circle (2.2pt);
+\node[fill=white, draw=crimson!70, rounded corners=2pt, inner sep=2pt, text=crimson!90!black, anchor=north west, font=\tiny\bfseries]
+    at (19.55,5.88) {$\mathcal{M}_4\text{ Raw MSE}: \propto \sigma_k^2\;(2{,}500\times)$};
+
+% Curve 2: M5A Heteroscedastic NLL Gradient Variance = 1x Flat Homoscedastic!
+\draw[draw=teal!90!black, line width=2.3pt] (19.45,2.90) -- (26.65,2.90);
+\filldraw[fill=teal!90!black, draw=white, line width=0.6pt] (19.45,2.90) circle (2.2pt);
+\filldraw[fill=teal!90!black, draw=white, line width=0.6pt] (26.65,2.90) circle (2.2pt);
+\node[fill=softteal, draw=darkteal, rounded corners=2pt, inner sep=2pt, text=darkteal, anchor=south, font=\tiny\bfseries]
+    at (23.35,3.02) {$\mathcal{M}_{5A}\text{ NLL } (\hat{\sigma}_k^{-2}):\;\text{Flat } 1.0\times\text{ Across All } \sigma_k$};
+
+% Double arrow showing 2,500x suppression at sigma_k = 5.0
+\draw[<->, draw=amber!90!black, line width=1.25pt] (26.15,2.98) -- (26.15,5.75);
+\node[fill=softamber, draw=amber!85!black, rounded corners=2pt, inner sep=1.5pt, text=amber!90!black, anchor=east, font=\tiny\bfseries]
+    at (26.05,4.45) {$\div 2{,}500\times$};
+
+% Bottom summary metrics box in Panel (B)
+\node[fill=softteal!75, draw=darkteal, line width=0.85pt, rounded corners=3pt, inner sep=3.5pt, text width=8.85cm, anchor=south west, font=\scriptsize]
+    at (18.02,0.22) {
+    $\mathrm{Test\_1000}:\;\; R^2(\hat{\sigma}_{\mathcal{M}_{5A}}) = \mathbf{0.996632},\;\; \mathrm{MSE}(\hat{\mu}) = 0.7933 \to \mathbf{0.7584}$\\[1.5pt]
+    $\max_k |\hat{\mu}_{\mathcal{M}_{5A}} - \hat{\mu}_{\mathrm{phylolm}}| \to 0,\quad \gamma_{c_4} \approx c_4(147)^{-1} = 1.0017$
+};
+
+\end{tikzpicture}
+\end{document}

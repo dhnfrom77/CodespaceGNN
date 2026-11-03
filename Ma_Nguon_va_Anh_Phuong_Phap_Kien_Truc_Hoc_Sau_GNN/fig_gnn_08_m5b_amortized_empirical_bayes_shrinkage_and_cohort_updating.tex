@@ -1,0 +1,246 @@
+\documentclass[border=8pt,tikz]{standalone}
+\usepackage{fontspec}
+\usepackage{babel}
+\babelprovide[import, main]{vietnamese}
+\babelfont{rm}{Latin Modern Roman}
+\babelfont{sf}{Latin Modern Roman}
+\babelfont{tt}{Latin Modern Roman}
+\usepackage{tikz}
+\usepackage{Box}
+\usepackage{RightBandedBox}
+\usepackage{Ball}
+\usetikzlibrary{arrows.meta,calc,positioning}
+
+\begin{document}
+\begin{tikzpicture}
+
+% ==============================================================================
+% PANEL (A): M5B AMORTIZED EMPIRICAL-BAYES SHRINKAGE ARCHITECTURE (HYBRID 3D + TIKZ)
+% ==============================================================================
+\filldraw[fill=white, draw=slate!45, line width=0.95pt, rounded corners=5pt] (0.00,0.00) rectangle (17.55,11.80);
+\node[fill=navy, text=white, rounded corners=3pt, inner sep=4pt, anchor=north west, font=\small\bfseries]
+    at (0.20,11.60) {(A) \texttt{PhyloGNN\_M5B\_BayesMMSE}: Truncated-Normal $[-5,5]$, $\mathrm{Grid}_{250}$ \& 3D \texttt{ResMLP}};
+
+% 1. Left Input: M5A Trunk Output Tensor (mu_5A, sigma_5A, s_0,k)
+\pic[shift={(0,0,0)}] at (1.05,5.95) {
+    RightBandedBox={
+        name=m5a_in,
+        caption={$(\hat{\mu}_{5A},\hat{\sigma}_{5A},\hat{s}_{0,k})$},
+        xlabel={{3}},
+        ylabel=$B$,
+        zlabel=295,
+        fill=ConvColor,
+        bandfill=ConvReluColor,
+        height=16,
+        width={{1.35,1.35,1.35}},
+        depth=13
+    }
+};
+\node[fill=softamber, draw=amber!85!black, rounded corners=2.5pt, inner sep=2.5pt, anchor=north, font=\scriptsize\bfseries]
+    at (1.75,3.55) {$\hat{s}_{0,k} = \hat{\sigma}_{5A}\sqrt{v_\rho / N}$};
+
+% ------------------------------------------------------------------------------
+% TOP STREAM: 1D TRUNCATED-NORMAL [-5, 5] POSTERIOR SHRINKAGE (TIKZ DENSITY PLOT)
+% ------------------------------------------------------------------------------
+\filldraw[fill=softred!40, draw=crimson!75, line width=0.95pt, rounded corners=4pt]
+    (5.35,7.35) rectangle (12.35,10.95);
+\node[fill=crimson!90!black, text=white, rounded corners=2pt, inner sep=2pt, anchor=north west, font=\tiny\bfseries]
+    at (5.50,10.82) {1D Truncated-Normal Posterior $\mathcal{N}(\hat{\mu}_{5A}, \hat{s}_{0,k}^2)\big|_{[-5,5]}$};
+
+% Shaded cut-off left tail (< -5) + Gaussian curve
+\filldraw[fill=crimson!28, draw=none] (5.65,8.15) -- (5.65,8.35) -- (5.71,8.39) -- (5.76,8.44) -- (5.82,8.49) -- (5.88,8.55) -- (5.93,8.62) -- (5.99,8.69) -- (6.05,8.77) -- (6.10,8.86) -- (6.16,8.95) -- (6.22,9.04) -- (6.27,9.14) -- (6.33,9.24) -- (6.39,9.34) -- (6.44,9.44) -- (6.50,9.53) -- (6.50,8.15) -- cycle;
+\draw[draw=slate!80, line width=1.10pt] (5.55,8.15) -- (8.55,8.15);
+\draw[draw=crimson!90!black, line width=1.50pt] (5.65,8.35) -- (5.73,8.41) -- (5.81,8.48) -- (5.89,8.57) -- (5.97,8.67) -- (6.05,8.78) -- (6.13,8.90) -- (6.21,9.03) -- (6.29,9.17) -- (6.37,9.31) -- (6.45,9.45) -- (6.53,9.58) -- (6.61,9.70) -- (6.69,9.80) -- (6.77,9.88) -- (6.85,9.93) -- (6.93,9.95) -- (7.01,9.94) -- (7.09,9.90) -- (7.17,9.84) -- (7.25,9.75) -- (7.33,9.64) -- (7.41,9.52) -- (7.49,9.38) -- (7.57,9.24) -- (7.65,9.10) -- (7.73,8.97) -- (7.81,8.84) -- (7.89,8.72) -- (7.97,8.62) -- (8.05,8.52) -- (8.13,8.44) -- (8.21,8.38) -- (8.29,8.32) -- (8.37,8.28) -- (8.45,8.25);
+
+% Boundary line at -5 (x=6.50), raw MLE at x=6.95, shrunk MMSE at x=7.55
+\draw[draw=crimson, line width=1.20pt, dashed] (6.50,8.05) -- (6.50,10.15);
+\node[text=crimson, anchor=north, font=\tiny\bfseries] at (6.02,8.08) {$<-5$};
+\draw[draw=slate, line width=1.0pt, dotted] (6.95,8.15) -- (6.95,9.95);
+\node[text=slate, anchor=north, font=\tiny\bfseries] at (6.95,8.08) {$\hat{\mu}_{5A}$};
+
+\draw[->, draw=darkgreen, line width=1.45pt] (6.95,9.10) -- (7.55,9.10);
+\draw[draw=darkgreen, line width=1.30pt] (7.55,8.10) -- (7.55,9.80);
+\node[text=darkgreen, anchor=north, font=\tiny\bfseries] at (7.68,8.08) {$\hat{\mu}_{\mathrm{TN}}$};
+
+% Exact Truncated-Normal Hazard Shift Formula cleanly inside Top Box
+\node[fill=white, draw=crimson!55, rounded corners=2.5pt, inner sep=2.5pt, anchor=west, font=\scriptsize]
+    at (8.62,9.05) {
+    $\begin{array}{@{}l@{}}
+    \alpha_k = \frac{-5-\hat{\mu}_{5A}}{\hat{s}_{0,k}},\;\; \beta_k = \frac{5-\hat{\mu}_{5A}}{\hat{s}_{0,k}}\\[3pt]
+    \Delta_{\mathrm{TN}} = \hat{s}_{0,k}\dfrac{\phi(\alpha_k)-\phi(\beta_k)}{\Phi(\beta_k)-\Phi(\alpha_k)}
+    \end{array}$
+};
+
+% ------------------------------------------------------------------------------
+% MIDDLE STREAM: 3D RESIDUAL SHRINKAGE MLP (4 -> 64 -> 32 -> 2, PLOTNEURALNET)
+% ------------------------------------------------------------------------------
+\pic[shift={(0,0,0)}] at (7.45,5.35) {
+    RightBandedBox={
+        name=res_mlp,
+        caption={3D \texttt{ResMLP} ($4\to 64\to 32\to 2$)},
+        xlabel={{4,64,32,2}},
+        ylabel=$B$,
+        zlabel=GELU,
+        fill=PurpleTensor,
+        bandfill=FcReluColor,
+        height=12,
+        width={{1.1,1.6,1.3,1.0}},
+        depth=11
+    }
+};
+
+% ------------------------------------------------------------------------------
+% BOTTOM STREAM: 250-POINT LOG-NORMAL PRIOR x CHI^2_147 LIKELIHOOD GRID
+% ------------------------------------------------------------------------------
+\filldraw[fill=softteal!50, draw=darkteal!80, line width=0.95pt, rounded corners=4pt]
+    (5.35,0.35) rectangle (12.35,3.70);
+\node[fill=darkteal, text=white, rounded corners=2pt, inner sep=2pt, anchor=north west, font=\tiny\bfseries]
+    at (5.50,3.56) {250-Point Log-Normal Prior $\pi(\sigma_g) \times \chi^2_{147}$ Likelihood Quadrature ($\sigma_g \in [0.1,5.0]$)};
+
+\node[fill=white, draw=darkteal!55, rounded corners=2.5pt, inner sep=2.2pt, anchor=west, font=\scriptsize] at (5.48,1.92) {
+    $\begin{array}{@{}l@{}}
+    \ell_g = -147\ln\sigma_g - \dfrac{Q_{\mathrm{int},k}}{2\sigma_g^2} + \ln\pi(\sigma_g)\\[3pt]
+    \mathbf{w}_k = \mathrm{Softmax}(\boldsymbol{\ell}),\;\; \hat{\sigma}_{\mathrm{Grid}} = \sum_{g} w_{k,g}\sigma_g
+    \end{array}$
+};
+
+\pic[shift={(0,0,0)}] at (11.25,1.92) {
+    RightBandedBox={
+        name=grid_simplex,
+        caption=$\mathbf{w}_k \in \Delta^{249}$,
+        xlabel={{250}},
+        ylabel=$B$,
+        fill=TealTensor,
+        bandfill=UnpoolColor,
+        height=9,
+        width={{1.35}},
+        depth=8
+    }
+};
+
+% ------------------------------------------------------------------------------
+% RIGHT READOUT MERGE BALLS & 3D OUTPUT TENSORS IN PANEL (A)
+% ------------------------------------------------------------------------------
+\pic[shift={(0,0,0)}] at (13.75,9.15) {
+    Ball={name=mu_sum, fill=SumColor, radius=2.0, logo=$\oplus$}
+};
+\pic[shift={(0,0,0)}] at (15.55,9.15) {
+    RightBandedBox={
+        name=mu_5b_out,
+        caption={$\hat{\mu}_{k,\mathcal{M}_{5B}} \in [-5,5]$},
+        xlabel={{1}},
+        ylabel=$B$,
+        fill=RedTensor,
+        bandfill=PoolColor,
+        height=11,
+        width={{1.5}},
+        depth=10
+    }
+};
+
+\pic[shift={(0,0,0)}] at (13.75,1.92) {
+    Ball={name=sig_sum, fill=SumColor, radius=2.0, logo=$\Sigma$}
+};
+\pic[shift={(0,0,0)}] at (15.55,1.92) {
+    RightBandedBox={
+        name=sig_5b_out,
+        caption={$\hat{\sigma}_{k,\mathcal{M}_{5B}} \in [0.1,5]$},
+        xlabel={{1}},
+        ylabel=$B$,
+        fill=PurpleTensor,
+        bandfill=FcColor,
+        height=11,
+        width={{1.5}},
+        depth=10
+    }
+};
+
+% Routing arrows inside Panel (A)
+\draw[->, draw=slate, line width=1.35pt] (m5a_in-east) -- (4.45,5.95) -- (4.45,9.15) -- (5.35,9.15);
+\draw[->, draw=slate, line width=1.35pt] (m5a_in-east) -- (4.45,5.95) -- (4.45,5.35) -- (res_mlp-west);
+\draw[->, draw=slate, line width=1.35pt] (m5a_in-east) -- (4.45,5.95) -- (4.45,1.92) -- (5.35,1.92);
+
+\draw[->, draw=crimson!90!black, line width=1.35pt] (12.35,9.15) -- (mu_sum-west);
+\draw[->, draw=darkteal, line width=1.35pt] (12.35,1.92) -- (sig_sum-west);
+
+% ResMLP outputs delta_mu (up) and delta_sigma (down)
+\draw[->, draw=purple!90!black, line width=1.35pt] (res_mlp-east) -- (13.75,5.35) -- (mu_sum-south);
+\draw[->, draw=purple!90!black, line width=1.35pt] (res_mlp-east) -- (13.75,5.35) -- (sig_sum-north);
+
+\draw[->, draw=crimson!90!black, line width=1.45pt] (mu_sum-east) -- (mu_5b_out-west);
+\draw[->, draw=darkteal, line width=1.45pt] (sig_sum-east) -- (sig_5b_out-west);
+
+% ==============================================================================
+% PANEL (B): MULTI-SCALE COHORT BAYESIAN UPDATING (N = 1 -> 100,000, TIKZ)
+% ==============================================================================
+\filldraw[fill=white, draw=slate!45, line width=0.95pt, rounded corners=5pt] (17.85,6.05) rectangle (27.40,11.80);
+\node[fill=navy, text=white, rounded corners=3pt, inner sep=4pt, anchor=north west, font=\small\bfseries]
+    at (18.05,11.60) {(B) Multi-Scale Cohort Updating ($N \in \{1,\dots,10^5\}$)};
+
+\node[fill=softblue!65, draw=deepblue!85, line width=0.95pt, rounded corners=4pt, inner sep=4pt, text width=8.75cm, anchor=north west, font=\scriptsize]
+    at (18.12,10.78) {
+    {\bfseries\color{deepblue} 1. Single-Tree ($N = 1$):}\; $\hat{s}_{0,k}^{(1)} = 0.4496\,\hat{\sigma}_{5A} \implies \mathbf{-30.2\%\;\mathrm{MSE}(\hat{\mu})}$\\[2.5pt]
+    {\bfseries\color{darkteal} 2. Cohort ($N$ Trees):}\; $\hat{s}_0^{(N)} = \hat{\sigma}_{(N)}\sqrt{v_\rho / N} \xrightarrow{N\to\infty} 0\;\;(\text{Slope }-0.50)$\\[2.5pt]
+    $N = 10^5:\;\; |\hat{\mu}_{(N)} - \mu^*| = \mathbf{0.000418}\;(0.013\%),\;\; |\hat{\sigma}_{(N)} - \sigma^*| = \mathbf{0.000236}$
+};
+
+% Mini Convergence Law Plot O(N^{-1/2}) inside Panel (B)
+\filldraw[fill=slate!4, draw=slate!35, line width=0.65pt, rounded corners=2pt] (18.85,6.60) rectangle (26.95,8.25);
+\draw[->, draw=slate, line width=0.95pt] (18.85,6.60) -- (27.08,6.60);
+\draw[->, draw=slate, line width=0.95pt] (18.85,6.60) -- (18.85,8.38);
+\node[text=slate, anchor=east, font=\tiny\bfseries] at (18.78,8.05) {$10^{-1}$};
+\node[text=slate, anchor=east, font=\tiny\bfseries] at (18.78,6.85) {$10^{-4}$};
+\draw[draw=teal!90!black, line width=1.85pt] (19.25,8.05) -- (21.65,7.65) -- (24.05,7.25) -- (26.45,6.85);
+\filldraw[fill=teal!90!black, draw=white, line width=0.5pt] (19.25,8.05) circle (2.0pt);
+\filldraw[fill=teal!90!black, draw=white, line width=0.5pt] (21.65,7.65) circle (2.0pt);
+\filldraw[fill=teal!90!black, draw=white, line width=0.5pt] (24.05,7.25) circle (2.0pt);
+\filldraw[fill=crimson, draw=white, line width=0.5pt] (26.45,6.85) circle (2.2pt);
+\node[text=slate, anchor=north, font=\tiny] at (19.25,6.55) {$N=10^2$};
+\node[text=slate, anchor=north, font=\tiny] at (21.65,6.55) {$10^3$};
+\node[text=slate, anchor=north, font=\tiny] at (24.05,6.55) {$10^4$};
+\node[text=crimson, anchor=north, font=\tiny\bfseries] at (26.35,6.55) {$10^5\;(0.013\%)$};
+\node[fill=white, draw=darkteal!50, rounded corners=1.5pt, inner sep=1.5pt, text=darkteal, anchor=south west, font=\tiny\bfseries]
+    at (22.35,7.55) {$\mathcal{O}(N^{-1/2})\;\text{Slope }-0.50$};
+
+% ==============================================================================
+% PANEL (C): PLUG-AND-PLAY POST-BM EVOLUTIONARY SDE EXTENSION (SBI, [22-30])
+% ==============================================================================
+\filldraw[fill=white, draw=slate!45, line width=0.95pt, rounded corners=5pt] (17.85,0.00) rectangle (27.40,5.75);
+\node[fill=purple!90!black, text=white, rounded corners=3pt, inner sep=4pt, anchor=north west, font=\small\bfseries]
+    at (18.05,5.55) {(C) Plug-and-Play Post-BM SBI Extension [22--30]};
+
+% Left: Replaceable Forward SDE Simulator Block (TikZ, crisp single-line bullets)
+\node[fill=softamber, draw=amber!90!black, line width=1.0pt, rounded corners=4pt, inner sep=3.8pt, text width=5.48cm, anchor=north west, font=\scriptsize]
+    at (18.12,4.78) {
+    {\bfseries\color{amber!90!black} Forward SDE Simulator $\mathcal{S}(\boldsymbol{\theta}, \mathcal{T})$:}\\[2.5pt]
+    $\bullet\;\mathbf{\mathrm{OU}}:\;\mathrm{d}X_t = \alpha(\theta-X_t)\mathrm{d}t + \sigma\mathrm{d}W_t$\\[2pt]
+    $\bullet\;\mathbf{\mathrm{Bounded}}:\;X_t \in [a,b]\;\text{(Reflected BM)}$\\[2pt]
+    $\bullet\;\mathbf{\mathrm{L\acute{e}vy}}:\;\mathrm{d}X_t = \sigma\mathrm{d}W_t + \mathrm{d}J_t(\lambda_J, \sigma_J)$\\[2pt]
+    $\bullet\;\mathbf{\mathrm{mvSLOUCH}}:\;\mathrm{d}\mathbf{X}_t = \mathbf{A}(\boldsymbol{\theta}-\mathbf{X}_t)\mathrm{d}t + \boldsymbol{\Sigma}\mathrm{d}\mathbf{W}_t$
+};
+
+% Right: Frozen Reusable PhyloGNN_M5B 3D Module -> Posterior Parameter Vector \hat{\theta}
+\pic[shift={(0,0,0)}] at (24.95,3.42) {
+    RightBandedBox={
+        name=sbi_gnn,
+        caption={Reusable \texttt{M5B}},
+        xlabel={{$\hat{\boldsymbol{\theta}}_{\mathrm{MMSE}}$}},
+        ylabel=$B$,
+        zlabel=295,
+        fill=PurpleTensor,
+        bandfill=FcReluColor,
+        height=12,
+        width={{1.45,1.45}},
+        depth=10
+    }
+};
+
+\draw[->, draw=amber!90!black, line width=1.45pt] (23.82,3.42) -- (sbi_gnn-west);
+
+\node[fill=softpurple!75, draw=purple!85!black, line width=0.85pt, rounded corners=3pt, inner sep=3.5pt, text width=8.75cm, anchor=south west, font=\scriptsize]
+    at (18.12,0.22) {
+    $\text{Intractable } p(\mathbf{X}\mid\boldsymbol{\theta}) \;\implies\; \texttt{PhyloGNN\_M5B}(\mathcal{G}_{\mathcal{T}}) \approx \mathbb{E}[\boldsymbol{\theta}\mid\mathbf{X}]\;\;(41.2\text{ ms / } 10^4\text{ trees})$
+};
+
+\end{tikzpicture}
+\end{document}

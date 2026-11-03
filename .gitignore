@@ -1,0 +1,14 @@
+# Môi trường ảo Python và bộ nhớ đệm Bytecode (Tuyệt đối không đưa vào Git)
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Bộ nhớ đệm của Jupyter Notebook, Pytest và Ruff
+.ipynb_checkpoints/
+.pytest_cache/
+.ruff_cache/
+
+# Tệp hệ điều hành và cấu hình cá nhân
+.DS_Store
+Thumbs.db

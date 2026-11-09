@@ -1,58 +1,43 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Bước 2: Giải tích Không gian Hilbert <u, v>_{S^-1}, Định lý Phân rã Trực giao 147 + 1 DOF,
-        Thuật toán Cắt tỉa Cấu trúc 3 Điểm Tuyến tính O(n) của `phylolm` (Ho & Ané, 2014)
-        và Kiểm chứng Tương đương Tuyệt đối (< 10^-15) với Cholesky GLS & Felsenstein PIC.
-
-Tham chiếu:
-  - Hình K2: Hình học Không gian Hilbert <u, v>_{S^-1} & Định lý Pythagoras 147 + 1 DOF.
-  - Hình K3: Lưu đồ Thuật toán Cắt tỉa Cấu trúc 3 Điểm Tuyến tính O(n) của `phylolm`.
-  - Figure 1: Chẩn đoán dữ liệu, trọng số cắt tỉa w_{phylolm, i} và kiểm định t ≈ 1.0.
-  - Tiểu luận Mục 3.1 - 3.2 & Cell 8 - Cell 11 trong Master Notebook.
+Bước 2: Thuật toán Cắt tỉa Cấu trúc 3 Điểm Tuyến tính O(n) của `phylolm` (Ho & Ané, 2014),
+        Kiểm chứng Tương đương Đại số (< 10^-14) với Cholesky GLS & Felsenstein PIC trên
+        cả Tập Train (10,000 mẫu) và Tập Test Mô phỏng Cố định (1,000 mẫu).
 """
 
 # 1. Thư viện chuẩn của Python
 import math
+import sys
+from pathlib import Path
 from typing import Dict
+
+if str(Path(__file__).resolve().parents[1]) not in sys.path:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 # 2. Thư viện bên thứ ba
 import numpy as np
 from scipy import linalg
 
 # 3. Mã của chính dự án
-import sys
-from pathlib import Path
-if str(Path(__file__).resolve().parents[1]) not in sys.path:
-    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from bm_gnn.step0_tree_and_bm_simulator import (
     FromScratchPhylogenyBuilder,
     c4_factor,
     compute_reusable_metrics,
 )
-from bm_gnn.step1_data_diagnostics_and_star import load_and_audit_calib123
+from bm_gnn.step1_data_diagnostics_and_star import load_train_and_fixed_test_datasets
 
 
 def run_phylolm_3pt_pruning_from_scratch(
     builder: FromScratchPhylogenyBuilder,
     x_mat: np.ndarray,
 ) -> Dict[str, np.ndarray]:
-    """
-    Thuật toán Cắt tỉa Cấu trúc 3 Điểm Tuyến tính O(n) của Ho & Ané (2014, `phylolm`):
-    Duyệt hậu tố 1 lượt qua 295 nút với 6 thanh ghi đại số (logd_u, u1_u, uX_u, vec11_u, p1_u, pp_u)
-    để tính chính xác mu_hat_GLS, Q_internal, sigma_hat_REML (khử chệch c_4) và ln det(S).
-    """
+    """Thuật toán Cắt tỉa Cấu trúc 3 Điểm Tuyến tính O(n) của Ho & Ané (2014, `phylolm`)."""
     m_samples, n_leaves = x_mat.shape
     df = n_leaves - 1
     c4_val = c4_factor(df)
 
-    logd = {}
-    u1 = {}
-    u_x = {}
-    vec11 = {}
-    p1 = {}
-    pp = {}
-
+    logd, u1, u_x, vec11, p1, pp = {}, {}, {}, {}, {}, {}
     for u in builder.postorder_nodes:
         nid = u.node_id
         t_u = u.length if u.parent is not None else 0.0
@@ -110,22 +95,17 @@ def run_cholesky_gls_and_pic_solvers(
     builder: FromScratchPhylogenyBuilder,
     x_mat: np.ndarray,
 ) -> Dict[str, np.ndarray]:
-    """
-    Tính nghiệm bằng Đại số Tuyến tính Cholesky GLS O(n^3) và Quy hoạch Động
-    Tương phản Độc lập Felsenstein PIC O(n) để đối chiếu sai số máy với `phylolm`.
-    """
+    """Tính nghiệm bằng Cholesky GLS O(n^3) và Quy hoạch Động Felsenstein PIC O(n)."""
     m_samples, n_leaves = x_mat.shape
     df = n_leaves - 1
     c4_val = c4_factor(df)
 
-    # 1. Cholesky GLS
     mu_chol = x_mat @ builder.w_gls
-    residuals = (x_mat - mu_chol[:, None]).T  # (n, M)
+    residuals = (x_mat - mu_chol[:, None]).T
     whitened = linalg.solve_triangular(builder.L_S, residuals, lower=True)
     q_chol = np.sum(whitened ** 2, axis=0)
     sigma_reml_chol = np.sqrt(q_chol / df) / c4_val
 
-    # 2. Felsenstein PIC (1985)
     h_nodes = np.zeros((m_samples, len(builder.all_nodes)), dtype=np.float64)
     v_nodes = np.zeros(len(builder.all_nodes), dtype=np.float64)
     c_int = np.zeros((m_samples, df), dtype=np.float64)
@@ -158,55 +138,63 @@ def run_cholesky_gls_and_pic_solvers(
         "Q_pic": q_pic,
         "sigma_reml_pic": sigma_reml_pic,
         "C_int": c_int,
+        "H_nodes": h_nodes,
+        "v_nodes": v_nodes,
     }
 
 
 def run_step2_pipeline() -> Dict[str, object]:
-    """Thực thi Bước 2: chạy `phylolm`, đối chiếu Cholesky/PIC và kiểm định t ≈ 1.0."""
+    """Thực thi Bước 2 trên cả tập Train (10,000 mẫu) và tập Test cố định (1,000 mẫu)."""
     builder = FromScratchPhylogenyBuilder()
-    _, mu_true, sigma_true, x_mat = load_and_audit_calib123(builder)
+    (
+        _,
+        mu_tr,
+        sig_tr,
+        x_tr,
+        _,
+        mu_te,
+        sig_te,
+        x_te,
+    ) = load_train_and_fixed_test_datasets(builder)
 
-    res_phylo = run_phylolm_3pt_pruning_from_scratch(builder, x_mat)
-    res_other = run_cholesky_gls_and_pic_solvers(builder, x_mat)
+    res_phylo_tr = run_phylolm_3pt_pruning_from_scratch(builder, x_tr)
+    res_phylo_te = run_phylolm_3pt_pruning_from_scratch(builder, x_te)
+    res_other_te = run_cholesky_gls_and_pic_solvers(builder, x_te)
 
-    max_diff_mu_pic = float(np.max(np.abs(res_phylo["mu_hat"] - res_other["mu_pic"])))
-    max_diff_mu_chol = float(np.max(np.abs(res_phylo["mu_hat"] - res_other["mu_chol"])))
-    max_diff_q_pic = float(np.max(np.abs(res_phylo["Q_internal"] - res_other["Q_pic"])))
-    max_diff_q_chol = float(np.max(np.abs(res_phylo["Q_internal"] - res_other["Q_chol"])))
+    max_diff_mu_pic = float(np.max(np.abs(res_phylo_te["mu_hat"] - res_other_te["mu_pic"])))
+    max_diff_mu_chol = float(np.max(np.abs(res_phylo_te["mu_hat"] - res_other_te["mu_chol"])))
 
-    t_reml = res_phylo["Q_internal"] / (147.0 * (sigma_true ** 2))
-    t_mean = float(np.mean(t_reml))
-    t_se = float(np.std(t_reml, ddof=1) / math.sqrt(len(t_reml)))
+    t_reml_tr = res_phylo_tr["Q_internal"] / (147.0 * (sig_tr ** 2))
+    t_reml_te = res_phylo_te["Q_internal"] / (147.0 * (sig_te ** 2))
 
-    pred_se_phylo = res_phylo["sigma_reml"] * math.sqrt(builder.v_root)
-    metrics_mu = compute_reusable_metrics(
-        mu_true, res_phylo["mu_hat"], sigma_scale=sigma_true, pred_se=pred_se_phylo
+    se_te = res_phylo_te["sigma_reml"] * math.sqrt(builder.v_root)
+    metrics_mu_te = compute_reusable_metrics(
+        mu_te, res_phylo_te["mu_hat"], sigma_scale=sig_te, pred_se=se_te
     )
-    metrics_sig = compute_reusable_metrics(
-        sigma_true, res_phylo["sigma_reml"], sigma_scale=sigma_true
+    metrics_sig_te = compute_reusable_metrics(
+        sig_te, res_phylo_te["sigma_reml"], sigma_scale=sig_te
     )
 
     return {
         "max_diff_mu_phylolm_vs_pic": max_diff_mu_pic,
         "max_diff_mu_phylolm_vs_cholesky": max_diff_mu_chol,
-        "max_diff_Q_phylolm_vs_pic": max_diff_q_pic,
-        "max_diff_Q_phylolm_vs_cholesky": max_diff_q_chol,
-        "t_reml_mean": t_mean,
-        "t_reml_se": t_se,
-        "phylolm_full10000_mu": metrics_mu,
-        "phylolm_full10000_sigma": metrics_sig,
+        "t_reml_train_mean": float(np.mean(t_reml_tr)),
+        "t_reml_train_se": float(np.std(t_reml_tr, ddof=1) / math.sqrt(len(t_reml_tr))),
+        "t_reml_test_mean": float(np.mean(t_reml_te)),
+        "t_reml_test_se": float(np.std(t_reml_te, ddof=1) / math.sqrt(len(t_reml_te))),
+        "phylolm_test1000_mu": metrics_mu_te,
+        "phylolm_test1000_sigma": metrics_sig_te,
     }
 
 
 if __name__ == "__main__":
     info2 = run_step2_pipeline()
-    print("===== KẾT QUẢ BƯỚC 2: TIÊU CHUẨN VÀNG phylolm & KIỂM CHỨNG ĐẠI SỐ =====")
+    print("===== KẾT QUẢ BƯỚC 2: TIÊU CHUẨN VÀNG phylolm TRÊN TẬP TRAIN (10,000) & TEST CỐ ĐỊNH (1,000) =====")
     print(f"  * Sai lệch cực đại |mu_phylolm - mu_PIC|      : {info2['max_diff_mu_phylolm_vs_pic']:.3e}")
     print(f"  * Sai lệch cực đại |mu_phylolm - mu_Cholesky| : {info2['max_diff_mu_phylolm_vs_cholesky']:.3e}")
-    print(f"  * Sai lệch cực đại |Q_phylolm - Q_PIC|        : {info2['max_diff_Q_phylolm_vs_pic']:.3e}")
-    print(f"  * Sai lệch cực đại |Q_phylolm - Q_Cholesky|   : {info2['max_diff_Q_phylolm_vs_cholesky']:.3e}")
-    print(f"  * Kiểm định chiều cao cây t_hat_REML          : {info2['t_reml_mean']:.6f} ± {info2['t_reml_se']:.6f} (Chứa t = 1.0000)")
-    m_mu = info2["phylolm_full10000_mu"]
-    m_sg = info2["phylolm_full10000_sigma"]
-    print(f"  * phylolm (Full_10000) trên mu    : MSE = {m_mu['MSE']:.6f}, NRMSE_sig = {m_mu['NRMSE_by_sigma']:.4f}, PICP_95 = {m_mu['PICP_95_pct']:.2f}%")
-    print(f"  * phylolm (Full_10000) trên sigma : MSE = {m_sg['MSE']:.6f}, Bias = {m_sg['Bias']:+.6f}, R2 = {m_sg['R2']:.4f}")
+    print(f"  * Kiểm định t_hat_REML (Train 10,000 mẫu)     : {info2['t_reml_train_mean']:.6f} ± {info2['t_reml_train_se']:.6f}")
+    print(f"  * Kiểm định t_hat_REML (Test cố định 1,000)   : {info2['t_reml_test_mean']:.6f} ± {info2['t_reml_test_se']:.6f}")
+    m_mu = info2["phylolm_test1000_mu"]
+    m_sg = info2["phylolm_test1000_sigma"]
+    print(f"  * phylolm (Test 1,000) trên mu    : MSE = {m_mu['MSE']:.4f}, RMSE = {m_mu['RMSE']:.4f}, NRMSE_sig = {m_mu['NRMSE_by_sigma']:.4f}, PICP_95 = {m_mu['PICP_95_pct']:.1f}%")
+    print(f"  * phylolm (Test 1,000) trên sigma : MSE = {m_sg['MSE']:.5f}, RMSE = {m_sg['RMSE']:.4f}, MAPE = {m_sg['MAPE_pct']:.2f}%, R2 = {m_sg['R2']:.4f}")

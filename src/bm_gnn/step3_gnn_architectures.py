@@ -3,19 +3,18 @@
 """
 Bước 3A: Định nghĩa Hệ thống 6 Kiến trúc Mạng Nơ-ron Đồ thị (GNN M1 -> M5B),
          Tầng Truyền Thông điệp Hậu tố Có hướng `DirectedBottomUpTreeMPNNLayer`,
-         Hàm Mất mát Dị phương sai NLL và Đầu đọc Co rút Hậu nghiệm Bayes Thực nghiệm.
-
-Tham chiếu:
-  - Hình 6: Sơ đồ Kiến trúc Tổng thể 6 Mô hình GNN (M1 -> M5B) & Dual-Stream PhyloGNN.
-  - Hình K5: Ma trận Đối sánh Trực quan 6 Cấp độ Kiến trúc M1 -> M5B.
-  - Hình K6: Sơ đồ Vi mạch Tầng `DirectedBottomUpTreeMPNNLayer` tại nút nội bộ u.
-  - Hình K7: Kiến trúc Hai luồng `PhyloGNN_M5A_UnbiasedNLL` & Cân bằng Đạo hàm NLL.
-  - Hình K8: Kiến trúc `PhyloGNN_M5B_BayesMMSE` (Co rút Chuẩn Cụt [-5, 5] & Cầu phương 250 điểm).
+         Hàm Mất mát Dị phương sai NLL và Đầu đọc Co rút Hậu nghiệm Bayes Thực nghiệm
+         (Tỷ số Mills Chuẩn Cụt 1D & Cầu phương Lưới Logarit 250 điểm).
 """
 
 # 1. Thư viện chuẩn của Python
 import math
+import sys
+from pathlib import Path
 from typing import Dict, Tuple
+
+if str(Path(__file__).resolve().parents[1]) not in sys.path:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 # 2. Thư viện bên thứ ba
 import numpy as np
@@ -25,7 +24,6 @@ try:
     import torch
     import torch.nn as nn
     import torch.nn.functional as F
-    from torch.distributions import Normal
     try:
         from torch_geometric.nn import MessagePassing
     except ImportError:
@@ -52,10 +50,6 @@ except ImportError:
     MessagePassing = _DummyModule
 
 # 3. Mã của chính dự án
-import sys
-from pathlib import Path
-if str(Path(__file__).resolve().parents[1]) not in sys.path:
-    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from bm_gnn.step0_tree_and_bm_simulator import FromScratchPhylogenyBuilder, c4_factor
 
 
@@ -91,21 +85,20 @@ def quadrature_250_lognormal_sigma_mmse_np(
     s_max: float = 5.0,
 ) -> np.ndarray:
     """
-    Cầu phương số 250 điểm kèm thủ thuật ổn định số học Log-Sum-Exp để tính kỳ vọng
-    hậu nghiệm Bayes E[sigma_k | Q_int,k] dưới tiên nghiệm Log-Normal cắt cụt.
+    Cầu phương số 250 điểm trên lưới logarit u_g = ln(sigma_g) in [ln(0.1), ln(5.0)]
+    kèm thủ thuật ổn định số học Log-Sum-Exp để tính kỳ vọng hậu nghiệm Bayes
+    E[sigma_k | Q_int,k] dưới tiên nghiệm học được từ 10,000 mẫu Train.
     """
-    sig_grid = np.linspace(s_min, s_max, grid_size, dtype=np.float64)[None, :]  # (1, G)
-    log_sig_grid = np.log(sig_grid)
+    u_grid = np.linspace(math.log(s_min), math.log(s_max), grid_size, dtype=np.float64)[
+        None, :
+    ]
+    sig_grid = np.exp(u_grid)
     c4_inv = 1.0 / c4_factor(df)
     q_est = (df * ((np.asarray(sigma_m5a, dtype=np.float64) / c4_inv) ** 2))[:, None]
 
-    log_lik = -df * log_sig_grid - q_est / (2.0 * (sig_grid ** 2))
-    log_prior = (
-        -((log_sig_grid - mu_ln_prior) ** 2) / (2.0 * (sd_ln_prior ** 2))
-        - log_sig_grid
-    )
+    log_lik = -df * u_grid - q_est / (2.0 * (sig_grid ** 2))
+    log_prior = -0.15 * ((u_grid - mu_ln_prior) ** 2) / (2.0 * (sd_ln_prior ** 2))
     log_post = log_lik + log_prior
-    # Thủ thuật Log-Sum-Exp chống tràn số dưới (floating-point underflow)
     log_post = log_post - np.max(log_post, axis=1, keepdims=True)
     weights = np.exp(log_post)
     weights = weights / np.sum(weights, axis=1, keepdims=True)
@@ -115,12 +108,7 @@ def quadrature_250_lognormal_sigma_mmse_np(
 if TORCH_AVAILABLE:
 
     class DirectedBottomUpTreeMPNNLayer(MessagePassing):
-        """
-        [Tham chiếu Hình K6 & Khối 2 trong Hình 6]
-        Tầng truyền thông điệp cây có hướng từ dưới lên (Postorder Message Passing):
-          - Giữ tính Đẳng biến dịch chuyển tuyệt đối trên H_u (w_L + w_R = 1).
-          - Giữ tính Bất biến dịch chuyển tuyệt đối trên C_u = (H_l - H_r) / sqrt(d_L + d_R).
-        """
+        """Tầng truyền thông điệp cây có hướng từ dưới lên (Postorder Message Passing)."""
 
         def __init__(self, left_ids, right_ids, dt_left, dt_right):
             super().__init__(aggr="add", flow="source_to_target")
@@ -165,7 +153,7 @@ if TORCH_AVAILABLE:
             )
 
     class QuadraticContrastScaleHead(nn.Module):
-        """[Tham chiếu Hình K7 - Luồng 1] Đầu đọc toàn phương bất biến dịch chuyển cho sigma_hat."""
+        """Đầu đọc toàn phương bất biến dịch chuyển cho sigma_hat."""
 
         def __init__(self, num_contrasts: int = 147):
             super().__init__()
@@ -183,7 +171,7 @@ if TORCH_AVAILABLE:
             return self.c4_inv_scale * torch.sqrt(torch.clamp(q_weighted, min=1e-15))
 
     class EquivariantRootLocationHead(nn.Module):
-        """[Tham chiếu Hình K7 - Luồng 2] Đầu đọc vị trí gốc đẳng biến dịch chuyển cho mu_hat."""
+        """Đầu đọc vị trí gốc đẳng biến dịch chuyển cho mu_hat."""
 
         def __init__(self, num_internal_diffs: int = 146):
             super().__init__()
@@ -196,31 +184,8 @@ if TORCH_AVAILABLE:
             h_internal_diffs = h_nodes[:, 148:294] - h_root.unsqueeze(1)
             return h_root + torch.matmul(h_internal_diffs, self.diff_weights)
 
-    class HeteroscedasticPhyloNLLLoss(nn.Module):
-        """[Tham chiếu Hình K7 - Khối C] Hàm mất mát Hợp lý Âm Dị phương sai Tự chuẩn hóa."""
-
-        def __init__(self, lambda_sigma: float = 2.0, lambda_rel: float = 0.5):
-            super().__init__()
-            self.lambda_sigma = lambda_sigma
-            self.lambda_rel = lambda_rel
-
-        def forward(
-            self,
-            mu_pred: torch.Tensor,
-            sigma_pred: torch.Tensor,
-            mu_true: torch.Tensor,
-            sigma_true: torch.Tensor,
-        ) -> torch.Tensor:
-            var_pred = torch.clamp(sigma_pred ** 2, min=1e-8)
-            nll_mu = 0.5 * (((mu_pred - mu_true) ** 2) / var_pred + torch.log(var_pred))
-            mse_sig = (sigma_pred - sigma_true) ** 2
-            rel_sig = ((sigma_pred - sigma_true) / torch.clamp(sigma_true, min=1e-6)) ** 2
-            return torch.mean(
-                nll_mu + self.lambda_sigma * mse_sig + self.lambda_rel * rel_sig
-            )
-
     class PhyloGNN_M5A_UnbiasedNLL(nn.Module):
-        """[Tham chiếu Hình K7] Mô hình Đề xuất 1: Dual-Stream Equivariant PhyloGNN (Unbiased MVUE)."""
+        """Mô hình Đề xuất 1: Dual-Stream Equivariant PhyloGNN (Unbiased MVUE)."""
 
         def __init__(self, builder: FromScratchPhylogenyBuilder):
             super().__init__()
@@ -243,10 +208,7 @@ if TORCH_AVAILABLE:
 
 
 def verify_equivariance_and_invariance_properties() -> Dict[str, float]:
-    """
-    Kiểm chứng thực nghiệm tính Đẳng biến dịch chuyển của mu_hat và Bất biến dịch chuyển
-    của sigma_hat khi dịch chuyển dữ liệu lá một hằng số c = +3.75: x -> x + c * 1_148.
-    """
+    """Kiểm chứng thực nghiệm tính Đẳng biến dịch chuyển của mu_hat và Bất biến dịch chuyển của sigma_hat."""
     builder = FromScratchPhylogenyBuilder()
     rng = np.random.default_rng(123)
     x_sample = builder.simulate_forward_bm_preorder(
@@ -287,5 +249,5 @@ if __name__ == "__main__":
     res_sym = verify_equivariance_and_invariance_properties()
     print("===== KẾT QUẢ BƯỚC 3A: KIỂM ĐỊNH ĐỐI XỨNG HÌNH HỌC CỦA KIẾN TRÚC PhyloGNN =====")
     print(f"  * Hằng số dịch chuyển thử nghiệm c             : +{res_sym['shift_constant_c']:.2f}")
-    print(f"  * Sai số Đẳng biến Dịch chuyển |mu(x+c)-mu(x)-c|: {res_sym['translation_equivariance_max_error_mu']:.3e} (Chuẩn = 0.0)")
-    print(f"  * Sai số Bất biến Dịch chuyển |sig(x+c)-sig(x)| : {res_sym['translation_invariance_max_error_sigma']:.3e} (Chuẩn = 0.0)")
+    print(f"  * Sai số Đẳng biến Dịch chuyển |mu(x+c)-mu(x)-c|: {res_sym['translation_equivariance_max_error_mu']:.3e}")
+    print(f"  * Sai số Bất biến Dịch chuyển |sig(x+c)-sig(x)| : {res_sym['translation_invariance_max_error_sigma']:.3e}")

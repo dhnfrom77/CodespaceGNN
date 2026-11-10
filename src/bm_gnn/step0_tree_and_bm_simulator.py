@@ -124,15 +124,32 @@ class FromScratchPhylogenyBuilder:
     def __init__(
         self,
         nwk_path: Path = NWK_PATH,
-        meta_path: Path = META_PATH,
+        meta_path: Optional[Path] = META_PATH,
     ) -> None:
         self.nwk_path = Path(nwk_path)
-        self.meta_path = Path(meta_path)
+        self.meta_path = Path(meta_path) if meta_path is not None else None
         self.nwk_str = self.nwk_path.read_text(encoding="utf-8").strip()
-        self.meta = json.loads(self.meta_path.read_text(encoding="utf-8"))
-        self.species_names: List[str] = self.meta.get(
-            "leaf_names", self.meta.get("taxa_names")
-        )
+        s_clean = self.nwk_str[:-1].strip() if self.nwk_str.endswith(";") else self.nwk_str
+        toks = re.findall(r"\(|\)|,|[^(),:;]+|:[^(),:;]+", s_clean)
+        nwk_leaves = [
+            tok.strip()
+            for idx, tok in enumerate(toks)
+            if tok not in ("(", ")", ",")
+            and not tok.startswith(":")
+            and (idx == 0 or toks[idx - 1] in ("(", ","))
+        ]
+        if self.meta_path is not None and self.meta_path.exists():
+            loaded_meta = json.loads(self.meta_path.read_text(encoding="utf-8"))
+            cand_names = loaded_meta.get("leaf_names", loaded_meta.get("taxa_names", []))
+            if set(cand_names) == set(nwk_leaves) and len(cand_names) == len(nwk_leaves):
+                self.meta = loaded_meta
+                self.species_names: List[str] = cand_names
+            else:
+                self.meta = {"leaf_names": nwk_leaves, "n_leaves": len(nwk_leaves), "source_file": self.nwk_path.name}
+                self.species_names = nwk_leaves
+        else:
+            self.meta = {"leaf_names": nwk_leaves, "n_leaves": len(nwk_leaves), "source_file": self.nwk_path.name}
+            self.species_names = nwk_leaves
         self.n_leaves: int = len(self.species_names)
         self.leaf_to_col: Dict[str, int] = {
             name: i for i, name in enumerate(self.species_names)

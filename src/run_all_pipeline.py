@@ -48,7 +48,7 @@ def main() -> None:
     s2 = run_step2_pipeline()
     print(
         f"[Bước 2 Hoàn tất] Đối chiếu phylolm vs. PIC/Cholesky sai số < {s2['max_diff_mu_phylolm_vs_cholesky']:.2e} | "
-        f"t_REML(Train)={s2['t_reml_train_mean']:.6f}, t_REML(Test)={s2['t_reml_test_mean']:.6f}"
+        f"t_REML(Test_Sim_1000)={s2['t_reml_test_mean']:.6f} ± {s2['t_reml_test_se']:.6f}"
     )
 
     s3a = verify_equivariance_and_invariance_properties()

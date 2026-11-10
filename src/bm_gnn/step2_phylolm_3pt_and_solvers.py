@@ -144,27 +144,25 @@ def run_cholesky_gls_and_pic_solvers(
 
 
 def run_step2_pipeline() -> Dict[str, object]:
-    """Thực thi Bước 2 trên cả tập Train (10,000 mẫu) và tập Test cố định (1,000 mẫu)."""
+    """Thực thi Bước 2 và đánh giá độc lập trên tập Test cố định Test_Sim_1000 (1,000 mẫu)."""
     builder = FromScratchPhylogenyBuilder()
     (
         _,
-        mu_tr,
-        sig_tr,
-        x_tr,
+        _,
+        _,
+        _,
         _,
         mu_te,
         sig_te,
         x_te,
     ) = load_train_and_fixed_test_datasets(builder)
 
-    res_phylo_tr = run_phylolm_3pt_pruning_from_scratch(builder, x_tr)
     res_phylo_te = run_phylolm_3pt_pruning_from_scratch(builder, x_te)
     res_other_te = run_cholesky_gls_and_pic_solvers(builder, x_te)
 
     max_diff_mu_pic = float(np.max(np.abs(res_phylo_te["mu_hat"] - res_other_te["mu_pic"])))
     max_diff_mu_chol = float(np.max(np.abs(res_phylo_te["mu_hat"] - res_other_te["mu_chol"])))
 
-    t_reml_tr = res_phylo_tr["Q_internal"] / (147.0 * (sig_tr ** 2))
     t_reml_te = res_phylo_te["Q_internal"] / (147.0 * (sig_te ** 2))
 
     se_te = res_phylo_te["sigma_reml"] * math.sqrt(builder.v_root)
@@ -178,8 +176,6 @@ def run_step2_pipeline() -> Dict[str, object]:
     return {
         "max_diff_mu_phylolm_vs_pic": max_diff_mu_pic,
         "max_diff_mu_phylolm_vs_cholesky": max_diff_mu_chol,
-        "t_reml_train_mean": float(np.mean(t_reml_tr)),
-        "t_reml_train_se": float(np.std(t_reml_tr, ddof=1) / math.sqrt(len(t_reml_tr))),
         "t_reml_test_mean": float(np.mean(t_reml_te)),
         "t_reml_test_se": float(np.std(t_reml_te, ddof=1) / math.sqrt(len(t_reml_te))),
         "phylolm_test1000_mu": metrics_mu_te,
@@ -189,10 +185,9 @@ def run_step2_pipeline() -> Dict[str, object]:
 
 if __name__ == "__main__":
     info2 = run_step2_pipeline()
-    print("===== KẾT QUẢ BƯỚC 2: TIÊU CHUẨN VÀNG phylolm TRÊN TẬP TRAIN (10,000) & TEST CỐ ĐỊNH (1,000) =====")
+    print("===== KẾT QUẢ BƯỚC 2: TIÊU CHUẨN VÀNG phylolm TRÊN TẬP TEST CỐ ĐỊNH TEST_SIM_1000 (1,000 MẪU) =====")
     print(f"  * Sai lệch cực đại |mu_phylolm - mu_PIC|      : {info2['max_diff_mu_phylolm_vs_pic']:.3e}")
     print(f"  * Sai lệch cực đại |mu_phylolm - mu_Cholesky| : {info2['max_diff_mu_phylolm_vs_cholesky']:.3e}")
-    print(f"  * Kiểm định t_hat_REML (Train 10,000 mẫu)     : {info2['t_reml_train_mean']:.6f} ± {info2['t_reml_train_se']:.6f}")
     print(f"  * Kiểm định t_hat_REML (Test cố định 1,000)   : {info2['t_reml_test_mean']:.6f} ± {info2['t_reml_test_se']:.6f}")
     m_mu = info2["phylolm_test1000_mu"]
     m_sg = info2["phylolm_test1000_sigma"]

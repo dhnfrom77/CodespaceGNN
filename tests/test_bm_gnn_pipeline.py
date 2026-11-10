@@ -99,6 +99,9 @@ class TestCodespaceGNNPipeline(unittest.TestCase):
         fig_path = plot_flagship_test1000_scatter(eval_b)
         self.assertTrue(fig_path.exists())
 
+        bench_df = eval_b["bench_df"]
+        self.assertEqual(len(bench_df), 8)
+        self.assertTrue((bench_df["Split"] == "Test_Sim_1000").all())
         pred_df = eval_b["pred_test_df"]
         self.assertEqual(len(pred_df), 1000)
         r_m5a_phylo = np.corrcoef(

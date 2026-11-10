@@ -32,24 +32,14 @@ C:\Users\Admin\Desktop\CodespaceGNN\
 │   │   ├── calib_123.csv                        # [TẬP TRAIN] Toàn bộ 10,000 mẫu dùng để huấn luyện GNN & cổng co rút
 │   │   └── test_sim_1000_fixed.csv              # [TẬP TEST CỐ ĐỊNH] 1,000 mẫu mô phỏng độc lập (SEED=2026) để đánh giá
 │   │
-│   └── processed\                               # [SINH TỪ MÃ] Các bảng số liệu .csv và .json theo từng bước
+│   └── processed\                               # [SINH TỪ MÃ] Đúng 8 bảng số liệu .csv và .json theo giao thức chuẩn
 │       ├── ants_phylo_structure_matrix_S.csv
 │       ├── ants_phylo_inverse_and_gls_weights.csv
-│       ├── step1_calib123_diagnostics_and_benchmarks.csv
-│       ├── step1_summary_metrics.json
-│       ├── step2_benchmark_split_predictions.csv
-│       ├── step2_internal_nodes_contrasts_summary.csv
-│       ├── step2_summary_metrics.json
 │       ├── step3_ant_phylogeny_graph_nodes.csv
 │       ├── step3_ant_phylogeny_graph_edges.csv
-│       ├── step3_comprehensive_benchmark_comparison.csv
-│       ├── test_sim_1000_predictions_phylolm_m5a_m5b.csv  # Bảng 1,000 dự đoán (mu, sigma) trên tập Test cố định
-│       ├── step3_gnn_ablation_predictions.csv
-│       ├── step3_ablation_summary.json
-│       ├── step4_complete_comparative_synthesis_metrics.csv
+│       ├── test_sim_1000_predictions_phylolm_m5a_m5b.csv  # Bảng 1,000 dự đoán (mu, sigma) trên tập Test_Sim_1000
+│       ├── step3_comprehensive_benchmark_comparison.csv   # Bảng điểm 8 phương pháp trên tập Test_Sim_1000 (8 dòng)
 │       ├── step4_test1000_regime_and_boundary_analysis.csv
-│       ├── step4_prime_multipair_regime_comparison.csv
-│       ├── step4_prime_multiscale_summary.json
 │       └── master_notebook_exact_metrics.json
 │
 ├── src\                                         # [MÃ LÕI TÁI SỬ DỤNG] Tuân thủ chuẩn PEP 8 & thứ tự import 3 nhóm
@@ -62,8 +52,8 @@ C:\Users\Admin\Desktop\CodespaceGNN\
 │       ├── step1_data_diagnostics_and_star.py   # Bước 1: Kiểm toán calib_123.csv, hệ số kappa_T = 0.6151, Star M0 & Figure 0B-C
 │       ├── step2_phylolm_3pt_and_solvers.py     # Bước 2: Cắt tỉa 3 điểm tuyến tính phylolm O(n), PIC, Cholesky GLS & kiểm định t ≈ 1.0
 │       ├── step3_gnn_architectures.py           # Bước 3A: Tầng DirectedBottomUpTreeMPNNLayer & 6 kiến trúc GNN (M1 -> M5B)
-│       ├── step3_train_and_ablation.py          # Bước 3B: Đối sánh Ablation 6 mô hình GNN trên Test_1000 & Full_10000
-│       └── step4_multiscale_and_synthesis.py    # Bước 4: Thực nghiệm đa quy mô N = 100 -> 100,000 & luật hội tụ O(N^-1/2)
+│       ├── step3_train_and_ablation.py          # Bước 3B: Huấn luyện trên Train_10000 & đánh giá độc lập trên Test_Sim_1000
+│       └── step4_multiscale_and_synthesis.py    # Bước 4: Phân tích phân tầng 4 chế độ sigma_k & vùng biên mu_k trên Test_Sim_1000
 │
 ├── notebooks\                                   # [KHÁM PHÁ & TRÌNH BÀY] Chỉ import từ src/bm_gnn/
 │   └── BM_GNN_Ant_Phylogeny_Master_Pipeline_VI.ipynb
@@ -231,10 +221,10 @@ python src/bm_gnn/step2_phylolm_3pt_and_solvers.py
 # Bước 3A: Kiểm chứng toán học tính Đẳng biến dịch chuyển của mu_hat và Bất biến dịch chuyển của sigma_hat
 python src/bm_gnn/step3_gnn_architectures.py
 
-# Bước 3B: Bảng điểm đối sánh Ablation 6 kiến trúc GNN (M1 -> M5B) vs. phylolm trên Test_1000
+# Bước 3B: Huấn luyện 6 kiến trúc GNN (M1 -> M5B) trên Train_10000 & đánh giá độc lập trên Test_Sim_1000
 python src/bm_gnn/step3_train_and_ablation.py
 
-# Bước 4: Thực nghiệm mở rộng đa quy mô N = 100, 1,000, 10,000, 100,000 cặp tự mô phỏng
+# Bước 4: Phân tích phân tầng theo 4 chế độ tốc độ tiến hóa sigma_k và vùng biên mu_k trên Test_Sim_1000
 python src/bm_gnn/step4_multiscale_and_synthesis.py
 
 ```

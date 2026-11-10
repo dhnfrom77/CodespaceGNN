@@ -136,7 +136,7 @@ def run_test1000_synthesis_and_regenerate_figures() -> Dict[str, object]:
             ),
             "c4_147": c4_factor(df),
         },
-        "benchmark_comparison_test1000_and_train10000": eval_bundle["bench_df"].to_dict(
+        "benchmark_comparison_test_sim_1000": eval_bundle["bench_df"].to_dict(
             orient="records"
         ),
         "test1000_regime_and_boundary_analysis": regime_df.to_dict(orient="records"),
@@ -244,29 +244,31 @@ def _regenerate_figure1(
     ax.legend(loc="upper left", fontsize=8.0)
     ax.grid(True, alpha=0.25)
 
-    # (C) Kiểm chứng t_REML ≈ 1.0 trên 10,000 mẫu Train_10000
+    # (C) Kiểm chứng t_REML ≈ 1.0 trên 1,000 mẫu Test_Sim_1000
     ax = axes[0, 2]
-    t_reml_tr = q_int_tr / (df * (sig_tr ** 2))
+    q_int_te = res_phylo_te["Q_internal"]
+    t_reml_te = q_int_te / (df * (sig_te ** 2))
+    se_t_te = float(np.std(t_reml_te, ddof=1) / math.sqrt(len(t_reml_te)))
     ax.scatter(
-        sig_tr[::2],
-        t_reml_tr[::2],
-        s=6,
-        alpha=0.35,
+        sig_te,
+        t_reml_te,
+        s=9,
+        alpha=0.45,
         color="#00a896",
         label=r"$\hat{t}_{\mathrm{REML}, k} = Q_{\mathrm{int}, k} / (147\sigma_k^2)$",
     )
     ax.axhline(1.0, color="#d62828", ls="--", lw=1.8, label=r"Chiều cao chuẩn $t = 1.0000$")
     ax.axhline(
-        float(np.mean(t_reml_tr)),
+        float(np.mean(t_reml_te)),
         color="#1d3557",
         ls=":",
         lw=1.4,
-        label=f"Trung bình mẫu $\\bar{{t}} = {np.mean(t_reml_tr):.4f} \\pm 0.0012$",
+        label=f"Trung bình mẫu $\\bar{{t}} = {np.mean(t_reml_te):.4f} \\pm {se_t_te:.4f}$",
     )
     ax.set_ylim(0.55, 1.55)
-    ax.set_xlabel(r"True Value $\sigma_k$")
+    ax.set_xlabel(r"True Value $\sigma_k$ (Test_Sim_1000, $N = 1,000$)")
     ax.set_ylabel(r"Thang thời gian suy ra $\hat{t}_k$")
-    ax.set_title(r"(C) Kiểm chứng $\hat{t}_{\mathrm{REML}} \approx 1.0$ trên $10,000$ mẫu")
+    ax.set_title(r"(C) Kiểm chứng $\hat{t}_{\mathrm{REML}} \approx 1.0$ trên Test_Sim_1000")
     ax.legend(loc="upper right", fontsize=8.0)
     ax.grid(True, alpha=0.25)
 
@@ -299,27 +301,28 @@ def _regenerate_figure1(
     ax.legend(loc="upper right", fontsize=7.8)
     ax.grid(True, alpha=0.25)
 
-    # (E) Kiểm chứng từng nút nội bộ u in {1..147}
+    # (E) Kiểm chứng từng nút nội bộ u in {1..147} trên Test_Sim_1000
     ax = axes[1, 1]
-    z_int_tr = other_tr["C_int"] / sig_tr[:, None]
-    std_u = np.std(z_int_tr, axis=0, ddof=1)
-    mean_u = 1.0 + np.mean(z_int_tr, axis=0)
+    other_te = eval_bundle["other_te"]
+    z_int_te = other_te["C_int"] / sig_te[:, None]
+    std_u = np.std(z_int_te, axis=0, ddof=1)
+    mean_u = 1.0 + np.mean(z_int_te, axis=0)
     u_idx = np.arange(1, df + 1)
     ax.scatter(u_idx, std_u, s=16, color="#1d3557", label=r"Độ lệch chuẩn mẫu $\mathrm{Std}(z_u)$")
     ax.scatter(u_idx, mean_u, s=16, marker="s", color="#00a896", alpha=0.75, label=r"$1 + \mathrm{Mean}(z_u)$")
     ax.axhline(1.0, color="#d62828", ls="--", lw=1.5, label=r"Mục tiêu $\mathcal{N}(0, 1)$ chuẩn = $1.000$")
     ax.fill_between(
         u_idx,
-        1.0 - 1.96 / math.sqrt(len(sig_tr)),
-        1.0 + 1.96 / math.sqrt(len(sig_tr)),
+        1.0 - 1.96 / math.sqrt(len(sig_te)),
+        1.0 + 1.96 / math.sqrt(len(sig_te)),
         color="gray",
         alpha=0.18,
-        label=r"Dải 95% Monte Carlo ($\pm 1.96/\sqrt{10,000}$)",
+        label=r"Dải 95% Monte Carlo ($\pm 1.96/\sqrt{1,000}$)",
     )
-    ax.set_ylim(0.95, 1.05)
+    ax.set_ylim(0.90, 1.10)
     ax.set_xlabel(r"Chỉ số nút phân nhánh nội bộ $u \in \{1, \dots, 147\}$")
     ax.set_ylabel(r"Thống kê tương phản chuẩn hóa $z_u$")
-    ax.set_title(r"(E) Kiểm định độc lập chuẩn tắc tại 147 nút nội bộ")
+    ax.set_title(r"(E) Kiểm định độc lập chuẩn tắc 147 nút nội bộ (Test_Sim_1000)")
     ax.legend(loc="upper right", fontsize=7.8)
     ax.grid(True, alpha=0.25)
 

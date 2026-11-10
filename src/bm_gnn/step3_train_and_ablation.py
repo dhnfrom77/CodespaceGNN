@@ -208,7 +208,7 @@ def train_on_calib10000_and_evaluate_on_fixed_test1000(
     sig_m5b_tr = np.clip((1.0 - gamma_sig) * sig_m5a_tr + gamma_sig * sig_bayes_tr, 0.1, 5.0)
     sig_m5b_te = np.clip((1.0 - gamma_sig) * sig_m5a_te + gamma_sig * sig_bayes_te, 0.1, 5.0)
 
-    # Tổng hợp bảng chỉ số trên Test_Sim_1000 (1,000 mẫu cố định) và Train_10000 (10,000 mẫu calib_123.csv)
+    # Tổng hợp bảng chỉ số độc lập ngoài mẫu trên Test_Sim_1000 (1,000 mẫu cố định; Train_10000 chỉ dùng huấn luyện)
     methods_te = [
         ("Star_Baseline", res_star_te["mu_hat"], res_star_te["sigma_mle"]),
         ("phylolm_GoldStandard", res_phylo_te["mu_hat"], res_phylo_te["sigma_reml"]),
@@ -219,21 +219,10 @@ def train_on_calib10000_and_evaluate_on_fixed_test1000(
         ("M5A_PhyloGNN_Unbiased_NLL", mu_m5a_te, sig_m5a_te),
         ("M5B_PhyloGNN_BayesMMSE", mu_m5b_te, sig_m5b_te),
     ]
-    methods_tr = [
-        ("Star_Baseline", res_star_tr["mu_hat"], res_star_tr["sigma_mle"]),
-        ("phylolm_GoldStandard", res_phylo_tr["mu_hat"], res_phylo_tr["sigma_reml"]),
-        ("M1_MLP_DeepSets", mu_m1_tr, sig_m1_tr),
-        ("M2_GCN_Unweighted", mu_m2_tr, sig_m2_tr),
-        ("M3_EdgeMPNN_GINE", mu_m3_tr, sig_m3_tr),
-        ("M4_PhyloGNN_RawMSE", mu_m4_tr, sig_m4_tr),
-        ("M5A_PhyloGNN_Unbiased_NLL", mu_m5a_tr, sig_m5a_tr),
-        ("M5B_PhyloGNN_BayesMMSE", mu_m5b_tr, sig_m5b_tr),
-    ]
 
     bench_rows = []
     for split_label, m_list, mu_gt, sig_gt in [
         ("Test_Sim_1000", methods_te, mu_te, sig_te),
-        ("Train_10000", methods_tr, mu_tr, sig_tr),
     ]:
         for m_name, m_pred, s_pred in m_list:
             mm = compute_reusable_metrics(
@@ -304,12 +293,7 @@ def train_on_calib10000_and_evaluate_on_fixed_test1000(
 
     return {
         "bench_df": bench_df,
-        "test_1000_df": bench_df[bench_df["Split"] == "Test_Sim_1000"].reset_index(
-            drop=True
-        ),
-        "train_10000_df": bench_df[bench_df["Split"] == "Train_10000"].reset_index(
-            drop=True
-        ),
+        "test_1000_df": bench_df.reset_index(drop=True),
         "pred_test_df": pred_test_df,
         "gamma_mu": gamma_mu,
         "gamma_sig": gamma_sig,

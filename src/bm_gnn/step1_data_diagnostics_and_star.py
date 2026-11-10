@@ -115,7 +115,6 @@ def run_step1_pipeline() -> Dict[str, object]:
     ks_sig = stats.ks_2samp(sig_tr, sig_te)
 
     t_diag = np.diag(builder.S_mat)
-    res_star_tr = run_star_baseline(t_diag, x_tr)
     res_star_te = run_star_baseline(t_diag, x_te)
 
     star_se_factor = math.sqrt(float(np.mean(builder.S_mat)))
@@ -139,12 +138,6 @@ def run_step1_pipeline() -> Dict[str, object]:
         "kappa_tree": builder.kappa_tree,
         "star_test1000_mu": m_mu_te,
         "star_test1000_sigma": m_sig_te,
-        "star_train10000_mu": compute_reusable_metrics(
-            mu_tr,
-            res_star_tr["mu_hat"],
-            sigma_scale=sig_tr,
-            pred_se=res_star_tr["sigma_reml"] * star_se_factor,
-        ),
     }
 
 
